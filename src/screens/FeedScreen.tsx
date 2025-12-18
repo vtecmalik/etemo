@@ -54,34 +54,40 @@ export default function FeedScreen() {
     try {
       setLoading(true);
 
-      // Получаем популярные продукты из Supabase с брендами и отзывами
+      // Получаем продукты
       const { data: productsData, error: productsError } = await supabase
         .from('cosme_products')
-        .select(`
-          id,
-          name_ru,
-          img_url,
-          brand_id,
-          cosme_brands (
-            name
-          )
-        `)
+        .select('id, name_ru, img_url, brand_id')
         .limit(20)
         .order('created_at', { ascending: false });
 
       if (productsError) throw productsError;
 
-      // Получаем количество отзывов и средний рейтинг для каждого продукта
+      if (!productsData || productsData.length === 0) {
+        setProducts([]);
+        setLoading(false);
+        return;
+      }
+
+      // Получаем уникальные brand_id
+      const brandIds = [...new Set(productsData.map(p => p.brand_id).filter(Boolean))];
+
+      // Загружаем бренды
+      const { data: brandsData } = await supabase
+        .from('cosme_brands')
+        .select('id, name')
+        .in('id', brandIds);
+
+      // Создаем Map брендов для быстрого доступа
+      const brandsMap = new Map((brandsData || []).map(b => [b.id, b]));
+
+      // Получаем статистику по отзывам для каждого продукта
       const productsWithStats = await Promise.all(
-        (productsData || []).map(async (product) => {
-          const { data: reviewsData, error: reviewsError } = await supabase
+        productsData.map(async (product) => {
+          const { data: reviewsData } = await supabase
             .from('cosme_reviews')
             .select('rating')
             .eq('product_id', product.id);
-
-          if (reviewsError) {
-            console.error('Error loading reviews:', reviewsError);
-          }
 
           const reviews = reviewsData || [];
           const reviews_count = reviews.length;
@@ -92,7 +98,7 @@ export default function FeedScreen() {
 
           return {
             ...product,
-            brand: product.cosme_brands,
+            brand: product.brand_id ? brandsMap.get(product.brand_id) : null,
             reviews_count,
             average_rating,
           };
