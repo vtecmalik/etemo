@@ -26,7 +26,6 @@ interface Product {
   name_ru: string;
   img_url?: string;
   brand_id?: string;
-  jan_code?: string;
   brand?: {
     brand_name_en: string;
   };
@@ -74,7 +73,7 @@ export default function FeedScreen() {
       // Получаем больше продуктов для сортировки
       const { data: productsData, error: productsError } = await supabase
         .from('cosme_products')
-        .select('id, name_ru, img_url, brand_id, jan_code')
+        .select('id, name_ru, img_url, brand_id')
         .range(offset, offset + PAGE_SIZE - 1)
         .order('id', { ascending: false });
 
@@ -177,7 +176,7 @@ export default function FeedScreen() {
     <TouchableScale
       onPress={() =>
         navigation.navigate('ProductResult', {
-          barcode: item.jan_code || item.id,
+          barcode: item.id,
           product: undefined,
         })
       }
