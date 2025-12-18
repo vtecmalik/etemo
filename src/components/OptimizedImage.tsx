@@ -69,10 +69,11 @@ export const OptimizedImage = React.memo(function OptimizedImage({
         placeholder={placeholder === 'blur' ? DEFAULT_BLURHASH : undefined}
         onLoad={handleLoad}
         onError={handleError}
-        // Кэширование
         cachePolicy="memory-disk"
-        // Приоритет загрузки
         priority="high"
+        recyclingKey={uri}
+        allowDownscaling={false}
+        responsivePolicy="initial"
       />
     </View>
   );
@@ -103,6 +104,10 @@ export const BrandLogo = React.memo(function BrandLogo({
       contentFit="contain"
       cachePolicy="memory-disk"
       transition={150}
+      recyclingKey={uri}
+      allowDownscaling={false}
+      responsivePolicy="initial"
+      priority="high"
     />
   );
 });

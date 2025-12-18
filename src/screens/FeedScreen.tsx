@@ -194,10 +194,13 @@ export default function FeedScreen() {
             <Image
               source={item.img_url}
               style={styles.image}
-              contentFit="cover"
+              contentFit="contain"
               transition={200}
               cachePolicy="memory-disk"
               priority="high"
+              recyclingKey={item.id}
+              allowDownscaling={false}
+              responsivePolicy="initial"
             />
           ) : (
             <View style={styles.imagePlaceholder}>
@@ -375,15 +378,15 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   productImage: {
-    width: 100,
-    height: 100,
+    width: 120,
+    height: 120,
     backgroundColor: COLORS.lightGray0,
     borderRadius: BORDER_RADIUS.md,
     overflow: 'hidden',
   },
   image: {
-    width: '100%',
-    height: '100%',
+    width: 120,
+    height: 120,
   },
   imagePlaceholder: {
     width: '100%',
