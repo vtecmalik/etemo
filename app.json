@@ -26,7 +26,11 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.etemo.app",
-      "permissions": ["CAMERA"]
+      "permissions": [
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

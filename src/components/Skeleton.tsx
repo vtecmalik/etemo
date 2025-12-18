@@ -1,12 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
-  interpolate,
-} from 'react-native-reanimated';
 import { COLORS, BORDER_RADIUS } from '../constants/theme';
 
 interface SkeletonProps {
@@ -22,22 +15,11 @@ export const Skeleton = React.memo(function Skeleton({
   borderRadius = BORDER_RADIUS.sm,
   style,
 }: SkeletonProps) {
-  const shimmer = useSharedValue(0);
-
-  useEffect(() => {
-    shimmer.value = withRepeat(withTiming(1, { duration: 1000 }), -1, true);
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(shimmer.value, [0, 1], [0.3, 0.7]),
-  }));
-
   return (
-    <Animated.View
+    <View
       style={[
         styles.skeleton,
         { width, height, borderRadius },
-        animatedStyle,
         style,
       ]}
     />

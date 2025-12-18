@@ -1,17 +1,7 @@
-// Кнопка с мгновенным тактильным откликом (как в Uber)
+// Кнопка с тактильным откликом (упрощенная версия без анимации)
 
-import React, { useCallback } from 'react';
-import { StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  runOnJS,
-} from 'react-native-reanimated';
-import {
-  Gesture,
-  GestureDetector,
-} from 'react-native-gesture-handler';
+import React from 'react';
+import { StyleSheet, ViewStyle, StyleProp, Pressable, Text } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
 interface TouchableScaleProps {
@@ -19,7 +9,6 @@ interface TouchableScaleProps {
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
-  activeScale?: number;
   haptic?: boolean;
 }
 
@@ -28,52 +17,30 @@ export const TouchableScale = React.memo(function TouchableScale({
   onPress,
   style,
   disabled = false,
-  activeScale = 0.97,
   haptic = true,
 }: TouchableScaleProps) {
-  const scale = useSharedValue(1);
-  const pressed = useSharedValue(false);
-
-  const handlePress = useCallback(() => {
+  const handlePress = () => {
     if (haptic) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     onPress();
-  }, [onPress, haptic]);
-
-  const gesture = Gesture.Tap()
-    .enabled(!disabled)
-    .onBegin(() => {
-      scale.value = withSpring(activeScale, {
-        damping: 15,
-        stiffness: 400,
-      });
-      pressed.value = true;
-    })
-    .onFinalize(() => {
-      scale.value = withSpring(1, {
-        damping: 15,
-        stiffness: 400,
-      });
-      if (pressed.value) {
-        runOnJS(handlePress)();
-      }
-      pressed.value = false;
-    });
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: disabled ? 0.5 : 1,
-  }));
+  };
 
   return (
-    <GestureDetector gesture={gesture}>
-      <Animated.View style={[style, animatedStyle]}>{children}</Animated.View>
-    </GestureDetector>
+    <Pressable
+      onPress={handlePress}
+      disabled={disabled}
+      style={({ pressed }) => [
+        style,
+        { opacity: pressed ? 0.7 : disabled ? 0.5 : 1 }
+      ]}
+    >
+      {children}
+    </Pressable>
   );
 });
 
-// Простая кнопка с анимацией
+// Простая кнопка
 interface AnimatedButtonProps {
   title: string;
   onPress: () => void;
@@ -117,11 +84,9 @@ export const AnimatedButton = React.memo(function AnimatedButton({
       disabled={disabled || loading}
       style={[styles.button, getButtonStyle(), style]}
     >
-      {loading ? (
-        <Animated.Text style={[styles.buttonText, getTextStyle()]}>...</Animated.Text>
-      ) : (
-        <Animated.Text style={[styles.buttonText, getTextStyle()]}>{title}</Animated.Text>
-      )}
+      <Text style={[styles.buttonText, getTextStyle()]}>
+        {loading ? '...' : title}
+      </Text>
     </TouchableScale>
   );
 });

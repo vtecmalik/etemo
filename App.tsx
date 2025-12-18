@@ -1,18 +1,14 @@
-import 'react-native-reanimated';
-import 'react-native-gesture-handler';
-
 import { StatusBar } from 'expo-status-bar';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import MainNavigator from './src/navigation/MainNavigator';
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar style="dark" />
       <MainNavigator />
-    </GestureHandlerRootView>
+    </View>
   );
 }
 

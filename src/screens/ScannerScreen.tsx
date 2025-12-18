@@ -10,15 +10,8 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
-  withSequence,
-} from 'react-native-reanimated';
 
-import { COLORS, SPACING, BORDER_RADIUS } from '../constants/theme';
+import { COLORS, SPACING } from '../constants/theme';
 import { RootStackParamList } from '../navigation/types';
 import { AnimatedButton } from '../components/TouchableScale';
 
@@ -36,24 +29,6 @@ export default function ScannerScreen() {
   const [scanned, setScanned] = useState(false);
   const [error, setError] = useState('');
   const lastScannedRef = useRef<string>('');
-
-  // Анимация линии сканирования
-  const scanLineY = useSharedValue(0);
-
-  useEffect(() => {
-    scanLineY.value = withRepeat(
-      withSequence(
-        withTiming(SCANNER_HEIGHT - 4, { duration: 1500 }),
-        withTiming(0, { duration: 1500 })
-      ),
-      -1,
-      false
-    );
-  }, []);
-
-  const scanLineStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: scanLineY.value }],
-  }));
 
   // Сброс при возврате на экран
   useEffect(() => {
@@ -149,8 +124,8 @@ export default function ScannerScreen() {
             <View style={[styles.corner, styles.bottomLeft]} />
             <View style={[styles.corner, styles.bottomRight]} />
 
-            {/* Animated scan line */}
-            <Animated.View style={[styles.scanLine, scanLineStyle]} />
+            {/* Scan line (static) */}
+            <View style={styles.scanLine} />
           </View>
 
           <View style={styles.sideOverlay} />
@@ -277,13 +252,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 8,
     right: 8,
+    top: SCANNER_HEIGHT / 2,
     height: 2,
     backgroundColor: COLORS.red,
     borderRadius: 1,
-    shadowColor: COLORS.red,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
   },
   bottomOverlay: {
     flex: 1.5,
