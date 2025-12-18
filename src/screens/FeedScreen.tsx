@@ -59,7 +59,7 @@ export default function FeedScreen() {
         .from('cosme_products')
         .select('id, name_ru, img_url, brand_id')
         .limit(20)
-        .order('created_at', { ascending: false });
+        .order('id', { ascending: false });
 
       if (productsError) throw productsError;
 
