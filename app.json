@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Etemo",
+    "slug": "etemo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F5F8"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.etemo.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Etemo использует камеру для сканирования штрих-кодов косметики"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F5F5F8"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.etemo.app",
+      "permissions": ["CAMERA"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Разрешите доступ к камере для сканирования штрих-кодов"
+        }
+      ],
+      "expo-barcode-scanner"
+    ]
+  }
+}
