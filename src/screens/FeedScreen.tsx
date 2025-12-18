@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Image,
 } from 'react-native';
-import { Image } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase, authService } from '../services/supabase';
@@ -192,13 +192,9 @@ export default function FeedScreen() {
         <View style={styles.productImage}>
           {item.img_url ? (
             <Image
-              source={item.img_url}
+              source={{ uri: item.img_url }}
               style={styles.image}
-              contentFit="cover"
-              cachePolicy="memory-disk"
-              priority="high"
-              recyclingKey={String(item.id)}
-              allowDownscaling={false}
+              resizeMode="cover"
             />
           ) : (
             <View style={styles.imagePlaceholder}>
@@ -376,15 +372,15 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   productImage: {
-    width: 140,
-    height: 140,
+    width: 100,
+    height: 100,
     backgroundColor: COLORS.lightGray0,
     borderRadius: BORDER_RADIUS.md,
     overflow: 'hidden',
   },
   image: {
-    width: 140,
-    height: 140,
+    width: 100,
+    height: 100,
   },
   imagePlaceholder: {
     width: '100%',
