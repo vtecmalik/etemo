@@ -13,12 +13,18 @@ export type RootStackParamList = {
   Ingredients: {
     product: Product;
   };
+  Login: undefined;
+  Questionnaire: {
+    step: 'gender' | 'age' | 'skin_type' | 'skin_tone' | 'pregnancy';
+  };
 };
 
 // Tab навигатор
 export type MainTabParamList = {
   Feed: undefined;
+  Favorites: undefined;
   Scanner: undefined;
+  History: undefined;
   Profile: undefined;
 };
 

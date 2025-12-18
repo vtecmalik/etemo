@@ -7,13 +7,29 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { authService } from '../services/supabase';
+import { authService, supabase } from '../services/supabase';
+import { useNavigation } from '@react-navigation/native';
 import { COLORS, SPACING, BORDER_RADIUS } from '../constants/theme';
 import { AnimatedButton } from '../components/TouchableScale';
 
+interface UserProfile {
+  id: string;
+  email?: string;
+  username?: string;
+  avatar_url?: string;
+  gender?: string;
+  age_range?: string;
+  skin_type?: string;
+  skin_tone?: string;
+  is_pregnant?: boolean;
+  created_at?: string;
+}
+
 export default function ProfileScreen() {
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation<any>();
 
   useEffect(() => {
     checkAuth();
@@ -23,6 +39,19 @@ export default function ProfileScreen() {
     try {
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
+
+      if (currentUser) {
+        // Load profile from cosme_users
+        const { data, error } = await supabase
+          .from('cosme_users')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (!error && data) {
+          setProfile(data);
+        }
+      }
     } catch (error) {
       console.error('Error checking auth:', error);
     } finally {
@@ -57,7 +86,10 @@ export default function ProfileScreen() {
             <Text style={styles.description}>
               Войдите, чтобы получить доступ к персональным рекомендациям и сохранить историю поиска
             </Text>
-            <AnimatedButton title="Войти или зарегистрироваться" onPress={() => {}} />
+            <AnimatedButton
+              title="Войти или зарегистрироваться"
+              onPress={() => navigation.navigate('Login')}
+            />
           </View>
 
           <View style={styles.featuresContainer}>

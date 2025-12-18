@@ -2,17 +2,22 @@ import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import { Text, View, TouchableOpacity, TextInput, StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList, MainTabParamList } from './types';
 import { COLORS } from '../constants/theme';
 
 // Screens
 import FeedScreen from '../screens/FeedScreen';
+import FavoritesScreen from '../screens/FavoritesScreen';
 import ScannerScreen from '../screens/ScannerScreen';
+import HistoryScreen from '../screens/HistoryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ProductResultScreen from '../screens/ProductResultScreen';
 import IngredientsScreen from '../screens/IngredientsScreen';
+import LoginScreen from '../screens/LoginScreen';
+import QuestionnaireScreen from '../screens/QuestionnaireScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -21,7 +26,9 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 const TabIcon = ({ name, focused }: { name: string; focused: boolean }) => {
   const icons: Record<string, string> = {
     Feed: '🏠',
+    Favorites: '❤️',
     Scanner: '📷',
+    History: '📋',
     Profile: '👤',
   };
 
@@ -73,6 +80,8 @@ function SearchHeader({ navigation }: any) {
 }
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -82,12 +91,12 @@ function MainTabs() {
         tabBarStyle: {
           backgroundColor: COLORS.white,
           borderTopColor: COLORS.greyLight,
-          height: 90,
-          paddingBottom: 30,
-          paddingTop: 10,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom,
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: '500',
         },
         headerStyle: {
@@ -109,11 +118,27 @@ function MainTabs() {
         })}
       />
       <Tab.Screen
+        name="Favorites"
+        component={FavoritesScreen}
+        options={{
+          title: 'Избранное',
+          headerTitle: 'Избранное',
+        }}
+      />
+      <Tab.Screen
         name="Scanner"
         component={ScannerScreen}
         options={{
           title: 'Сканер',
           headerTitle: 'Сканировать',
+        }}
+      />
+      <Tab.Screen
+        name="History"
+        component={HistoryScreen}
+        options={{
+          title: 'История',
+          headerTitle: 'История',
         }}
       />
       <Tab.Screen
@@ -162,6 +187,22 @@ export default function MainNavigator() {
           options={{
             title: 'Ингредиенты',
             presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{
+            title: 'Вход',
+            presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="Questionnaire"
+          component={QuestionnaireScreen}
+          options={{
+            title: 'Анкета',
+            presentation: 'card',
           }}
         />
       </Stack.Navigator>
