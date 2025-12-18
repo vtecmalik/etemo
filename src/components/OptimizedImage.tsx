@@ -71,9 +71,7 @@ export const OptimizedImage = React.memo(function OptimizedImage({
         onError={handleError}
         cachePolicy="memory-disk"
         priority="high"
-        recyclingKey={uri}
         allowDownscaling={false}
-        responsivePolicy="initial"
       />
     </View>
   );
@@ -104,9 +102,7 @@ export const BrandLogo = React.memo(function BrandLogo({
       contentFit="contain"
       cachePolicy="memory-disk"
       transition={150}
-      recyclingKey={uri}
       allowDownscaling={false}
-      responsivePolicy="initial"
       priority="high"
     />
   );

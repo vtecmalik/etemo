@@ -198,9 +198,8 @@ export default function FeedScreen() {
               transition={200}
               cachePolicy="memory-disk"
               priority="high"
-              recyclingKey={item.id}
+              recyclingKey={String(item.id)}
               allowDownscaling={false}
-              responsivePolicy="initial"
             />
           ) : (
             <View style={styles.imagePlaceholder}>
