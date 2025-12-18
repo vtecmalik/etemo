@@ -15,6 +15,7 @@ import { supabase, authService } from '../services/supabase';
 import { COLORS, SPACING, BORDER_RADIUS } from '../constants/theme';
 import { RootStackParamList } from '../navigation/types';
 import { TouchableScale } from '../components/TouchableScale';
+import { ProductCardSkeleton } from '../components/Skeleton';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -74,36 +75,47 @@ export default function FeedScreen() {
 
       // Загружаем бренды
       const { data: brandsData } = await supabase
-        .from('cosme_brands')
+        .from('glowpick_brands')
         .select('id, name')
         .in('id', brandIds);
 
       // Создаем Map брендов для быстрого доступа
       const brandsMap = new Map((brandsData || []).map(b => [b.id, b]));
 
-      // Получаем статистику по отзывам для каждого продукта
-      const productsWithStats = await Promise.all(
-        productsData.map(async (product) => {
-          const { data: reviewsData } = await supabase
-            .from('cosme_reviews')
-            .select('rating')
-            .eq('product_id', product.id);
+      // Получаем все ID продуктов
+      const productIds = productsData.map(p => p.id);
 
-          const reviews = reviewsData || [];
-          const reviews_count = reviews.length;
-          const average_rating =
-            reviews_count > 0
-              ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews_count
-              : 0;
+      // Загружаем ВСЕ отзывы для всех продуктов одним запросом
+      const { data: allReviewsData } = await supabase
+        .from('cosme_reviews')
+        .select('product_id, rating')
+        .in('product_id', productIds);
 
-          return {
-            ...product,
-            brand: product.brand_id ? brandsMap.get(product.brand_id) : null,
-            reviews_count,
-            average_rating,
-          };
-        })
-      );
+      // Группируем отзывы по product_id
+      const reviewsByProduct = new Map();
+      (allReviewsData || []).forEach(review => {
+        if (!reviewsByProduct.has(review.product_id)) {
+          reviewsByProduct.set(review.product_id, []);
+        }
+        reviewsByProduct.get(review.product_id).push(review.rating);
+      });
+
+      // Собираем продукты со статистикой
+      const productsWithStats = productsData.map(product => {
+        const reviews = reviewsByProduct.get(product.id) || [];
+        const reviews_count = reviews.length;
+        const average_rating =
+          reviews_count > 0
+            ? reviews.reduce((sum, r) => sum + (r || 0), 0) / reviews_count
+            : 0;
+
+        return {
+          ...product,
+          brand: product.brand_id ? brandsMap.get(product.brand_id) : null,
+          reviews_count,
+          average_rating,
+        };
+      });
 
       setProducts(productsWithStats);
     } catch (error) {
@@ -147,16 +159,18 @@ export default function FeedScreen() {
           <Text style={styles.productName} numberOfLines={2}>
             {item.name_ru || 'Product'}
           </Text>
-          <View style={styles.statsContainer}>
-            {item.average_rating && item.average_rating > 0 ? (
-              <Text style={styles.ratingText}>⭐ {item.average_rating.toFixed(1)}</Text>
-            ) : null}
-            {item.reviews_count && item.reviews_count > 0 ? (
-              <Text style={styles.reviewsText}>
-                {item.reviews_count} {item.reviews_count === 1 ? 'отзыв' : 'отзывов'}
-              </Text>
-            ) : null}
-          </View>
+          {(item.average_rating && item.average_rating > 0) || (item.reviews_count && item.reviews_count > 0) ? (
+            <View style={styles.statsContainer}>
+              {item.average_rating && item.average_rating > 0 ? (
+                <Text style={styles.ratingText}>⭐ {item.average_rating.toFixed(1)}</Text>
+              ) : null}
+              {item.reviews_count && item.reviews_count > 0 ? (
+                <Text style={styles.reviewsText}>
+                  {item.reviews_count} {item.reviews_count === 1 ? 'отзыв' : 'отзывов'}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
         </View>
       </View>
     </TouchableScale>
@@ -197,8 +211,13 @@ export default function FeedScreen() {
 
   if (loading && !refreshing) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <View style={styles.container}>
+        {renderHeader()}
+        <View style={styles.listContent}>
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <ProductCardSkeleton key={i} />
+          ))}
+        </View>
       </View>
     );
   }
@@ -222,8 +241,6 @@ export default function FeedScreen() {
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
       />
     </View>
   );
@@ -276,7 +293,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   productCard: {
-    width: '48%',
+    width: '100%',
+    flexDirection: 'row',
     backgroundColor: COLORS.white,
     borderRadius: BORDER_RADIUS.lg,
     marginBottom: SPACING.md,
@@ -288,8 +306,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   productImage: {
-    width: '100%',
-    aspectRatio: 1,
+    width: 100,
+    height: 100,
     backgroundColor: COLORS.lightGray0,
   },
   image: {
@@ -306,7 +324,9 @@ const styles = StyleSheet.create({
     fontSize: 48,
   },
   productInfo: {
-    padding: SPACING.sm,
+    flex: 1,
+    padding: SPACING.md,
+    justifyContent: 'center',
   },
   brandName: {
     fontSize: 11,
@@ -316,11 +336,10 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   productName: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.primary,
     fontWeight: '500',
-    lineHeight: 18,
-    minHeight: 36,
+    lineHeight: 20,
   },
   statsContainer: {
     marginTop: 4,
