@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View, TouchableOpacity, TextInput, StyleSheet, Platform } from 'react-native';
+import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList, MainTabParamList } from './types';
@@ -18,6 +18,7 @@ import ProductResultScreen from '../screens/ProductResultScreen';
 import IngredientsScreen from '../screens/IngredientsScreen';
 import LoginScreen from '../screens/LoginScreen';
 import QuestionnaireScreen from '../screens/QuestionnaireScreen';
+import SearchScreen from '../screens/SearchScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -39,41 +40,13 @@ const TabIcon = ({ name, focused }: { name: string; focused: boolean }) => {
   );
 };
 
-// Компонент поиска в хедере
-function SearchHeader({ navigation }: any) {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchText, setSearchText] = useState('');
-
-  const handleSearch = () => {
-    if (searchText.length === 13 && /^\d+$/.test(searchText)) {
-      navigation.navigate('ProductResult', { barcode: searchText });
-      setSearchText('');
-      setIsSearchOpen(false);
-    }
-  };
-
-  if (isSearchOpen) {
-    return (
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          value={searchText}
-          onChangeText={setSearchText}
-          placeholder="Введите штрих-код..."
-          keyboardType="number-pad"
-          maxLength={13}
-          autoFocus
-          onSubmitEditing={handleSearch}
-        />
-        <TouchableOpacity onPress={() => setIsSearchOpen(false)} style={styles.closeButton}>
-          <Text style={styles.closeIcon}>✕</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
+// Кнопка поиска в хедере
+function SearchButton({ navigation }: any) {
   return (
-    <TouchableOpacity onPress={() => setIsSearchOpen(true)} style={styles.searchIcon}>
+    <TouchableOpacity
+      onPress={() => navigation.navigate('Search')}
+      style={styles.searchIcon}
+    >
       <Text style={styles.searchIconText}>🔍</Text>
     </TouchableOpacity>
   );
@@ -114,7 +87,7 @@ function MainTabs() {
         options={({ navigation }) => ({
           title: 'Главная',
           headerTitle: 'Etemo',
-          headerRight: () => <SearchHeader navigation={navigation} />,
+          headerRight: () => <SearchButton navigation={navigation} />,
         })}
       />
       <Tab.Screen
@@ -205,34 +178,20 @@ export default function MainNavigator() {
             presentation: 'card',
           }}
         />
+        <Stack.Screen
+          name="Search"
+          component={SearchScreen}
+          options={{
+            headerShown: false,
+            presentation: 'card',
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.lightGray0,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    marginRight: 16,
-    height: 36,
-    width: 200,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: COLORS.primary,
-  },
-  closeButton: {
-    padding: 4,
-  },
-  closeIcon: {
-    fontSize: 16,
-    color: COLORS.gray4,
-  },
   searchIcon: {
     marginRight: 16,
     padding: 4,

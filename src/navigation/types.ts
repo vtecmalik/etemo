@@ -17,6 +17,7 @@ export type RootStackParamList = {
   Questionnaire: {
     step: 'gender' | 'age' | 'skin_type' | 'skin_tone' | 'pregnancy';
   };
+  Search: undefined;
 };
 
 // Tab навигатор

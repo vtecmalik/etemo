@@ -62,7 +62,7 @@ export default function FeedScreen() {
           name_ru,
           img_url,
           brand_id,
-          cosme_brands!cosme_products_brand_id_fkey (
+          cosme_brands (
             name
           )
         `)
