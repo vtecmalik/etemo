@@ -82,8 +82,8 @@ function MainTabs() {
         tabBarStyle: {
           backgroundColor: COLORS.white,
           borderTopColor: COLORS.greyLight,
-          height: 80,
-          paddingBottom: 20,
+          height: 90,
+          paddingBottom: 30,
           paddingTop: 10,
         },
         tabBarLabelStyle: {

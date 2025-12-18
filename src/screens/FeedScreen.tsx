@@ -22,11 +22,14 @@ type TabType = 'all' | 'recommended';
 
 interface Product {
   id: string;
-  barcode: string;
-  product_name: string;
-  brand_name: string;
-  image_url?: string;
-  rating?: number;
+  name_ru: string;
+  img_url?: string;
+  brand_id?: string;
+  brand?: {
+    name: string;
+  };
+  reviews_count?: number;
+  average_rating?: number;
 }
 
 export default function FeedScreen() {
@@ -51,16 +54,52 @@ export default function FeedScreen() {
     try {
       setLoading(true);
 
-      // Получаем популярные продукты из Supabase
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
+      // Получаем популярные продукты из Supabase с брендами и отзывами
+      const { data: productsData, error: productsError } = await supabase
+        .from('cosme_products')
+        .select(`
+          id,
+          name_ru,
+          img_url,
+          brand_id,
+          cosme_brands!cosme_products_brand_id_fkey (
+            name
+          )
+        `)
         .limit(20)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (productsError) throw productsError;
 
-      setProducts(data || []);
+      // Получаем количество отзывов и средний рейтинг для каждого продукта
+      const productsWithStats = await Promise.all(
+        (productsData || []).map(async (product) => {
+          const { data: reviewsData, error: reviewsError } = await supabase
+            .from('cosme_reviews')
+            .select('rating')
+            .eq('product_id', product.id);
+
+          if (reviewsError) {
+            console.error('Error loading reviews:', reviewsError);
+          }
+
+          const reviews = reviewsData || [];
+          const reviews_count = reviews.length;
+          const average_rating =
+            reviews_count > 0
+              ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews_count
+              : 0;
+
+          return {
+            ...product,
+            brand: product.cosme_brands,
+            reviews_count,
+            average_rating,
+          };
+        })
+      );
+
+      setProducts(productsWithStats);
     } catch (error) {
       console.error('Error loading products:', error);
       setProducts([]);
@@ -79,15 +118,15 @@ export default function FeedScreen() {
     <TouchableScale
       onPress={() =>
         navigation.navigate('ProductResult', {
-          barcode: item.barcode,
+          barcode: item.id,
           product: undefined,
         })
       }
     >
       <View style={styles.productCard}>
         <View style={styles.productImage}>
-          {item.image_url ? (
-            <Image source={{ uri: item.image_url }} style={styles.image} resizeMode="cover" />
+          {item.img_url ? (
+            <Image source={{ uri: item.img_url }} style={styles.image} resizeMode="cover" />
           ) : (
             <View style={styles.imagePlaceholder}>
               <Text style={styles.placeholderText}>📦</Text>
@@ -97,16 +136,21 @@ export default function FeedScreen() {
 
         <View style={styles.productInfo}>
           <Text style={styles.brandName} numberOfLines={1}>
-            {item.brand_name || 'Unknown Brand'}
+            {item.brand?.name || 'Unknown Brand'}
           </Text>
           <Text style={styles.productName} numberOfLines={2}>
-            {item.product_name || 'Product'}
+            {item.name_ru || 'Product'}
           </Text>
-          {item.rating && (
-            <View style={styles.ratingContainer}>
-              <Text style={styles.ratingText}>⭐ {item.rating.toFixed(1)}</Text>
-            </View>
-          )}
+          <View style={styles.statsContainer}>
+            {item.average_rating && item.average_rating > 0 ? (
+              <Text style={styles.ratingText}>⭐ {item.average_rating.toFixed(1)}</Text>
+            ) : null}
+            {item.reviews_count && item.reviews_count > 0 ? (
+              <Text style={styles.reviewsText}>
+                {item.reviews_count} {item.reviews_count === 1 ? 'отзыв' : 'отзывов'}
+              </Text>
+            ) : null}
+          </View>
         </View>
       </View>
     </TouchableScale>
@@ -272,13 +316,21 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     minHeight: 36,
   },
-  ratingContainer: {
+  statsContainer: {
     marginTop: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
   },
   ratingText: {
     fontSize: 12,
     color: COLORS.primary,
     fontWeight: '600',
+  },
+  reviewsText: {
+    fontSize: 11,
+    color: COLORS.gray4,
   },
   authPrompt: {
     flex: 1,
