@@ -160,7 +160,7 @@ export default function ProductResultScreen() {
     >
       {/* Product Image */}
       <View style={styles.imageContainer}>
-        <ProductImage uri={product.img_url} size={280} />
+        <ProductImage uri={product.img_url} size={320} />
       </View>
 
       {/* Product Info Card */}

@@ -194,8 +194,7 @@ export default function FeedScreen() {
             <Image
               source={item.img_url}
               style={styles.image}
-              contentFit="contain"
-              transition={200}
+              contentFit="cover"
               cachePolicy="memory-disk"
               priority="high"
               recyclingKey={String(item.id)}
@@ -377,15 +376,15 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   productImage: {
-    width: 120,
-    height: 120,
+    width: 140,
+    height: 140,
     backgroundColor: COLORS.lightGray0,
     borderRadius: BORDER_RADIUS.md,
     overflow: 'hidden',
   },
   image: {
-    width: 120,
-    height: 120,
+    width: 140,
+    height: 140,
   },
   imagePlaceholder: {
     width: '100%',

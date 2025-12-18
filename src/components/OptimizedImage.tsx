@@ -65,7 +65,6 @@ export const OptimizedImage = React.memo(function OptimizedImage({
         source={{ uri }}
         style={{ width, height }}
         contentFit="contain"
-        transition={200}
         placeholder={placeholder === 'blur' ? DEFAULT_BLURHASH : undefined}
         onLoad={handleLoad}
         onError={handleError}
@@ -101,7 +100,6 @@ export const BrandLogo = React.memo(function BrandLogo({
       style={{ width: size, height: size }}
       contentFit="contain"
       cachePolicy="memory-disk"
-      transition={150}
       allowDownscaling={false}
       priority="high"
     />
