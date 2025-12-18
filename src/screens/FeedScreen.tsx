@@ -26,8 +26,9 @@ interface Product {
   name_ru: string;
   img_url?: string;
   brand_id?: string;
+  jan_code?: string;
   brand?: {
-    name: string;
+    brand_name_en: string;
   };
   reviews_count?: number;
   average_rating?: number;
@@ -40,10 +41,17 @@ export default function FeedScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20;
 
   useEffect(() => {
     checkAuth();
-    loadProducts();
+    setProducts([]);
+    setPage(0);
+    setHasMore(true);
+    loadProducts(true);
   }, [activeTab]);
 
   const checkAuth = async () => {
@@ -51,23 +59,37 @@ export default function FeedScreen() {
     setUser(currentUser);
   };
 
-  const loadProducts = async () => {
+  const loadProducts = async (reset = false) => {
     try {
-      setLoading(true);
+      if (reset) {
+        setLoading(true);
+        setPage(0);
+      } else {
+        setLoadingMore(true);
+      }
 
-      // Получаем продукты
+      const currentPage = reset ? 0 : page;
+      const offset = currentPage * PAGE_SIZE;
+
+      // Получаем больше продуктов для сортировки
       const { data: productsData, error: productsError } = await supabase
         .from('cosme_products')
-        .select('id, name_ru, img_url, brand_id')
-        .limit(20)
+        .select('id, name_ru, img_url, brand_id, jan_code')
+        .range(offset, offset + PAGE_SIZE - 1)
         .order('id', { ascending: false });
 
       if (productsError) throw productsError;
 
       if (!productsData || productsData.length === 0) {
-        setProducts([]);
+        setHasMore(false);
+        if (reset) setProducts([]);
         setLoading(false);
+        setLoadingMore(false);
         return;
+      }
+
+      if (productsData.length < PAGE_SIZE) {
+        setHasMore(false);
       }
 
       // Получаем уникальные brand_id
@@ -76,7 +98,7 @@ export default function FeedScreen() {
       // Загружаем бренды
       const { data: brandsData } = await supabase
         .from('glowpick_brands')
-        .select('id, name')
+        .select('id, brand_name_en')
         .in('id', brandIds);
 
       // Создаем Map брендов для быстрого доступа
@@ -117,26 +139,45 @@ export default function FeedScreen() {
         };
       });
 
-      setProducts(productsWithStats);
+      // Сортируем по среднему рейтингу (популярности)
+      productsWithStats.sort((a, b) => b.average_rating - a.average_rating);
+
+      if (reset) {
+        setProducts(productsWithStats);
+      } else {
+        setProducts(prev => [...prev, ...productsWithStats]);
+      }
+
+      setPage(currentPage + 1);
     } catch (error) {
       console.error('Error loading products:', error);
-      setProducts([]);
+      if (reset) setProducts([]);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadProducts();
+    setProducts([]);
+    setPage(0);
+    setHasMore(true);
+    await loadProducts(true);
     setRefreshing(false);
+  };
+
+  const loadMore = () => {
+    if (!loadingMore && hasMore && !loading) {
+      loadProducts(false);
+    }
   };
 
   const renderProduct = ({ item }: { item: Product }) => (
     <TouchableScale
       onPress={() =>
         navigation.navigate('ProductResult', {
-          barcode: item.id,
+          barcode: item.jan_code || item.id,
           product: undefined,
         })
       }
@@ -144,7 +185,11 @@ export default function FeedScreen() {
       <View style={styles.productCard}>
         <View style={styles.productImage}>
           {item.img_url ? (
-            <Image source={{ uri: item.img_url }} style={styles.image} resizeMode="cover" />
+            <Image
+              source={{ uri: item.img_url, cache: 'force-cache' }}
+              style={styles.image}
+              resizeMode="contain"
+            />
           ) : (
             <View style={styles.imagePlaceholder}>
               <Text style={styles.placeholderText}>📦</Text>
@@ -154,7 +199,7 @@ export default function FeedScreen() {
 
         <View style={styles.productInfo}>
           <Text style={styles.brandName} numberOfLines={1}>
-            {item.brand?.name || 'Unknown Brand'}
+            {item.brand?.brand_name_en || 'Unknown Brand'}
           </Text>
           <Text style={styles.productName} numberOfLines={2}>
             {item.name_ru || 'Product'}
@@ -183,7 +228,10 @@ export default function FeedScreen() {
       <Text style={styles.authPromptText}>
         Войдите в систему и заполните анкету о вашей коже, чтобы получать индивидуальные рекомендации
       </Text>
-      <TouchableOpacity style={styles.authButton}>
+      <TouchableOpacity
+        style={styles.authButton}
+        onPress={() => navigation.navigate('Login')}
+      >
         <Text style={styles.authButtonText}>Войти или зарегистрироваться</Text>
       </TouchableOpacity>
     </View>
@@ -231,6 +279,15 @@ export default function FeedScreen() {
     );
   }
 
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return (
+      <View style={styles.footer}>
+        <ActivityIndicator size="small" color={COLORS.primary} />
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -238,9 +295,12 @@ export default function FeedScreen() {
         renderItem={renderProduct}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
       />
     </View>
   );
@@ -391,5 +451,9 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
+  },
+  footer: {
+    paddingVertical: SPACING.lg,
+    alignItems: 'center',
   },
 });
