@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { COLORS } from '../constants/theme';
 
@@ -21,6 +21,7 @@ export function IngredientsRingIndicator({
   onPress
 }: IngredientsRingIndicatorProps) {
   const [expanded, setExpanded] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const total = safe + medium + high + unknown;
 
@@ -29,17 +30,30 @@ export function IngredientsRingIndicator({
     return null;
   }
 
-  // Ширина кольца
-  const strokeWidth = expanded ? 12 : 8;
-  const radius = (size / 2) - (strokeWidth / 2);
+  // Анимация масштаба при расширении
+  useEffect(() => {
+    Animated.spring(scaleAnim, {
+      toValue: expanded ? 1.08 : 1,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 7
+    }).start();
+  }, [expanded, scaleAnim]);
+
+  // Ширина кольца и отступ
+  const baseStrokeWidth = 6;
+  const expandedStrokeWidth = 10;
+  const strokeWidth = expanded ? expandedStrokeWidth : baseStrokeWidth;
+
+  // При сжатом - вплотную, при расширенном - с отступом
+  const baseRadius = (size / 2) - (baseStrokeWidth / 2);
+  const expandedRadius = (size / 2) - (expandedStrokeWidth / 2) - 4;
+  const radius = expanded ? expandedRadius : baseRadius;
   const circumference = 2 * Math.PI * radius;
 
-  // Массив сегментов
+  // Массив сегментов - ЗЕЛЕНЫЙ ПЕРВЫМ (с 12 часов)
   const segments: { color: string; count: number; percent: number; label: string }[] = [];
 
-  if (unknown > 0) {
-    segments.push({ color: COLORS.riskUnknown, count: unknown, percent: unknown / total, label: 'Неопр.' });
-  }
   if (safe > 0) {
     segments.push({ color: COLORS.riskSafe, count: safe, percent: safe / total, label: 'Безоп.' });
   }
@@ -48,6 +62,9 @@ export function IngredientsRingIndicator({
   }
   if (high > 0) {
     segments.push({ color: COLORS.riskHigh, count: high, percent: high / total, label: 'Высок.' });
+  }
+  if (unknown > 0) {
+    segments.push({ color: COLORS.riskUnknown, count: unknown, percent: unknown / total, label: 'Неопр.' });
   }
 
   const handlePress = () => {
@@ -59,29 +76,35 @@ export function IngredientsRingIndicator({
   let currentOffset = 0;
 
   return (
-    <Pressable onPress={handlePress} style={{ position: 'absolute', width: size, height: size }}>
-      <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
-        {segments.map((segment, index) => {
-          const segmentLength = segment.percent * circumference;
-          const offset = currentOffset;
-          currentOffset += segmentLength;
+    <Animated.View style={{
+      position: 'absolute',
+      width: size,
+      height: size,
+      transform: [{ scale: scaleAnim }]
+    }}>
+      <Pressable onPress={handlePress} style={{ width: size, height: size }}>
+        <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
+          {segments.map((segment, index) => {
+            const segmentLength = segment.percent * circumference;
+            const offset = currentOffset;
+            currentOffset += segmentLength;
 
-          return (
-            <Circle
-              key={index}
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              stroke={segment.color}
-              strokeWidth={strokeWidth}
-              fill="none"
-              strokeDasharray={`${segmentLength} ${circumference}`}
-              strokeDashoffset={-offset}
-              strokeLinecap="round"
-            />
-          );
-        })}
-      </Svg>
+            return (
+              <Circle
+                key={index}
+                cx={size / 2}
+                cy={size / 2}
+                r={radius}
+                stroke={segment.color}
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeDasharray={`${segmentLength} ${circumference}`}
+                strokeDashoffset={-offset}
+                strokeLinecap="butt"
+              />
+            );
+          })}
+        </Svg>
 
       {/* Числа около сегментов при раскрытии */}
       {expanded && segments.map((segment, index) => {
@@ -116,7 +139,8 @@ export function IngredientsRingIndicator({
           </View>
         );
       })}
-    </Pressable>
+      </Pressable>
+    </Animated.View>
   );
 }
 

@@ -36,19 +36,21 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 function AnimatedProductCircle({
   loading,
   imageUri,
-  ingredientsStats
+  ingredientsStats,
+  onImagePress
 }: {
   loading: boolean;
   imageUri: string | null;
   ingredientsStats?: { safe: number; medium: number; high: number; unknown: number };
+  onImagePress?: () => void;
 }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const loadingOpacity = useRef(new Animated.Value(1)).current;
   const productOpacity = useRef(new Animated.Value(0)).current;
 
-  // Размеры круга - 80% от ширины экрана
-  const circleSize = SCREEN_WIDTH * 0.8;
+  // Размеры круга - 64% от ширины экрана (уменьшено на 20% от 80%)
+  const circleSize = SCREEN_WIDTH * 0.64;
   // Размер картинки - диагональ = диаметр круга, значит сторона = диаметр / √2
   const imageSize = circleSize * 0.707;
 
@@ -114,11 +116,14 @@ function AnimatedProductCircle({
           medium={ingredientsStats.medium}
           high={ingredientsStats.high}
           unknown={ingredientsStats.unknown}
-          size={circleSize + 16}
+          size={circleSize}
+          onPress={onImagePress}
         />
       )}
 
-      <View
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={onImagePress}
         style={[
           styles.animatedCircle,
           {
@@ -177,7 +182,7 @@ function AnimatedProductCircle({
             />
           )}
         </Animated.View>
-      </View>
+      </TouchableOpacity>
 
       {/* Текст загрузки */}
       {loading && (
@@ -332,6 +337,7 @@ export default function ProductResultScreen() {
         loading={loading}
         imageUri={product?.img_url || null}
         ingredientsStats={stats.total > 0 ? stats : undefined}
+        onImagePress={handleIngredientsPress}
       />
 
       {/* Error state */}
