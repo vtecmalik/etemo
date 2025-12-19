@@ -23,9 +23,10 @@ type TabType = 'all' | 'recommended';
 
 interface Product {
   barcode: string;
-  name: string;
-  brand: string;
-  image_url?: string;
+  name_ru: string;
+  name_en: string;
+  brand_name_en: string;
+  img_url?: string;
 }
 
 export default function FeedScreen() {
@@ -68,7 +69,7 @@ export default function FeedScreen() {
       // Получаем продукты из oleigh_products
       const { data: productsData, error: productsError } = await supabase
         .from('oleigh_products')
-        .select('barcode, name, brand, image_url')
+        .select('barcode, name_ru, name_en, brand_name_en, img_url')
         .range(offset, offset + PAGE_SIZE - 1)
         .order('barcode', { ascending: false });
 
@@ -124,10 +125,10 @@ export default function FeedScreen() {
           barcode: item.barcode,
           product: {
             id: item.barcode,
-            name_ru: item.name,
-            name_en: item.name,
-            img_url: item.image_url,
-            brand_name: item.brand,
+            name_ru: item.name_ru,
+            name_en: item.name_en,
+            img_url: item.img_url,
+            brand_name: item.brand_name_en,
             ingredients: null,
           },
         })
@@ -135,17 +136,17 @@ export default function FeedScreen() {
       style={styles.card}
     >
       <OptimizedImage
-        uri={item.image_url}
+        uri={item.img_url}
         width={72}
         height={72}
         borderRadius={BORDER_RADIUS.md}
       />
       <View style={styles.cardContent}>
         <Text style={styles.cardBrand} numberOfLines={1}>
-          {item.brand}
+          {item.brand_name_en}
         </Text>
         <Text style={styles.cardName} numberOfLines={2}>
-          {item.name}
+          {item.name_ru || item.name_en}
         </Text>
         <Text style={styles.cardMeta}>
           {item.barcode}
