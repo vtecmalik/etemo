@@ -108,7 +108,7 @@ function AnimatedProductCircle({
   return (
     <View style={styles.animatedCircleContainer}>
       {/* Цветное кольцо-индикатор ингредиентов */}
-      {!loading && ingredientsStats && false && (
+      {!loading && ingredientsStats && (
         <IngredientsRingIndicator
           safe={ingredientsStats.safe}
           medium={ingredientsStats.medium}
@@ -423,9 +423,8 @@ export default function ProductResultScreen() {
       )}
 
       {/* Ingredients Modal */}
-      {product && (
       <Modal
-        visible={showIngredientsModal}
+        visible={showIngredientsModal && !!product}
         transparent={true}
         animationType="fade"
         onRequestClose={() => setShowIngredientsModal(false)}
@@ -437,15 +436,16 @@ export default function ProductResultScreen() {
             onPress={() => setShowIngredientsModal(false)}
           />
           <View style={styles.modalContent}>
-            <IngredientsModalContent
-              product={product}
-              ingredientsLoading={ingredientsLoading}
-              onClose={() => setShowIngredientsModal(false)}
-            />
+            {product && (
+              <IngredientsModalContent
+                product={product}
+                ingredientsLoading={ingredientsLoading}
+                onClose={() => setShowIngredientsModal(false)}
+              />
+            )}
           </View>
         </View>
       </Modal>
-      )}
     </ScrollView>
   );
 }

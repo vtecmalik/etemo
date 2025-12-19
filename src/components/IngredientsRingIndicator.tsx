@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
-import Svg, { Path, G } from 'react-native-svg';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 import { COLORS } from '../constants/theme';
 
 interface IngredientsRingIndicatorProps {
@@ -29,86 +29,25 @@ export function IngredientsRingIndicator({
     return null;
   }
 
-  // Процентное соотношение
-  const safePercent = safe / total;
-  const mediumPercent = medium / total;
-  const highPercent = high / total;
-  const unknownPercent = unknown / total;
-
   // Ширина кольца
   const strokeWidth = expanded ? 12 : 8;
   const radius = (size / 2) - (strokeWidth / 2);
   const circumference = 2 * Math.PI * radius;
 
-  // Функция для создания дуги
-  const describeArc = (startAngle: number, endAngle: number) => {
-    const start = polarToCartesian(size / 2, size / 2, radius, endAngle);
-    const end = polarToCartesian(size / 2, size / 2, radius, startAngle);
-    const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
-
-    return [
-      'M', start.x, start.y,
-      'A', radius, radius, 0, largeArcFlag, 0, end.x, end.y
-    ].join(' ');
-  };
-
-  const polarToCartesian = (centerX: number, centerY: number, radius: number, angleInDegrees: number) => {
-    const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
-    return {
-      x: centerX + (radius * Math.cos(angleInRadians)),
-      y: centerY + (radius * Math.sin(angleInRadians))
-    };
-  };
-
-  // Рассчитываем углы для каждого сегмента
-  let currentAngle = 0;
-  const segments: { color: string; startAngle: number; endAngle: number; count: number; label: string }[] = [];
+  // Массив сегментов
+  const segments: { color: string; count: number; percent: number; label: string }[] = [];
 
   if (unknown > 0) {
-    const angle = unknownPercent * 360;
-    segments.push({
-      color: COLORS.riskUnknown,
-      startAngle: currentAngle,
-      endAngle: currentAngle + angle,
-      count: unknown,
-      label: 'Неопр.'
-    });
-    currentAngle += angle;
+    segments.push({ color: COLORS.riskUnknown, count: unknown, percent: unknown / total, label: 'Неопр.' });
   }
-
   if (safe > 0) {
-    const angle = safePercent * 360;
-    segments.push({
-      color: COLORS.riskSafe,
-      startAngle: currentAngle,
-      endAngle: currentAngle + angle,
-      count: safe,
-      label: 'Безоп.'
-    });
-    currentAngle += angle;
+    segments.push({ color: COLORS.riskSafe, count: safe, percent: safe / total, label: 'Безоп.' });
   }
-
   if (medium > 0) {
-    const angle = mediumPercent * 360;
-    segments.push({
-      color: COLORS.riskMedium,
-      startAngle: currentAngle,
-      endAngle: currentAngle + angle,
-      count: medium,
-      label: 'Средн.'
-    });
-    currentAngle += angle;
+    segments.push({ color: COLORS.riskMedium, count: medium, percent: medium / total, label: 'Средн.' });
   }
-
   if (high > 0) {
-    const angle = highPercent * 360;
-    segments.push({
-      color: COLORS.riskHigh,
-      startAngle: currentAngle,
-      endAngle: currentAngle + angle,
-      count: high,
-      label: 'Высок.'
-    });
+    segments.push({ color: COLORS.riskHigh, count: high, percent: high / total, label: 'Высок.' });
   }
 
   const handlePress = () => {
@@ -116,28 +55,48 @@ export function IngredientsRingIndicator({
     onPress?.();
   };
 
+  // Вычисляем offset для каждого сегмента
+  let currentOffset = 0;
+
   return (
     <Pressable onPress={handlePress} style={{ position: 'absolute', width: size, height: size }}>
-      <Svg width={size} height={size}>
-        <G>
-          {segments.map((segment, index) => (
-            <Path
+      <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
+        {segments.map((segment, index) => {
+          const segmentLength = segment.percent * circumference;
+          const offset = currentOffset;
+          currentOffset += segmentLength;
+
+          return (
+            <Circle
               key={index}
-              d={describeArc(segment.startAngle, segment.endAngle)}
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
               stroke={segment.color}
               strokeWidth={strokeWidth}
               fill="none"
+              strokeDasharray={`${segmentLength} ${circumference}`}
+              strokeDashoffset={-offset}
               strokeLinecap="round"
             />
-          ))}
-        </G>
+          );
+        })}
       </Svg>
 
       {/* Числа около сегментов при раскрытии */}
       {expanded && segments.map((segment, index) => {
-        const midAngle = (segment.startAngle + segment.endAngle) / 2;
+        // Вычисляем позицию для каждого сегмента
+        let accumulatedPercent = 0;
+        for (let i = 0; i < index; i++) {
+          accumulatedPercent += segments[i].percent;
+        }
+        const midPercent = accumulatedPercent + (segment.percent / 2);
+        const angle = midPercent * 360;
+        const angleRad = ((angle - 90) * Math.PI) / 180;
         const labelRadius = radius + strokeWidth + 20;
-        const labelPos = polarToCartesian(size / 2, size / 2, labelRadius, midAngle);
+
+        const labelX = (size / 2) + (labelRadius * Math.cos(angleRad));
+        const labelY = (size / 2) + (labelRadius * Math.sin(angleRad));
 
         return (
           <View
@@ -145,8 +104,8 @@ export function IngredientsRingIndicator({
             style={[
               styles.label,
               {
-                left: labelPos.x - 24,
-                top: labelPos.y - 16,
+                left: labelX - 24,
+                top: labelY - 16,
               }
             ]}
           >
