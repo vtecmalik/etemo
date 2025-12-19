@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -6,7 +6,7 @@ import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList, MainTabParamList } from './types';
-import { COLORS } from '../constants/theme';
+import { COLORS, SPACING } from '../constants/theme';
 
 // Screens
 import FeedScreen from '../screens/FeedScreen';
@@ -39,6 +39,45 @@ const TabIcon = ({ name, focused }: { name: string; focused: boolean }) => {
     </View>
   );
 };
+
+// Кастомный хедер для Feed экрана с табами
+function FeedHeader({ navigation, activeTab, onTabChange }: any) {
+  return (
+    <View style={styles.feedHeader}>
+      {/* Logo */}
+      <Text style={styles.logoText}>Etemo</Text>
+
+      {/* Tabs */}
+      <View style={styles.headerTabs}>
+        <TouchableOpacity
+          style={[styles.headerTab, activeTab === 'all' && styles.headerTabActive]}
+          onPress={() => onTabChange('all')}
+        >
+          <Text style={[styles.headerTabText, activeTab === 'all' && styles.headerTabTextActive]}>
+            Все
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.headerTab, activeTab === 'recommended' && styles.headerTabActive]}
+          onPress={() => onTabChange('recommended')}
+        >
+          <Text style={[styles.headerTabText, activeTab === 'recommended' && styles.headerTabTextActive]}>
+            Рек.
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Search Button */}
+      <TouchableOpacity
+        onPress={() => navigation.navigate('Search')}
+        style={styles.headerSearchIcon}
+      >
+        <Text style={styles.searchIconText}>🔍</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 // Кнопка поиска в хедере
 function SearchButton({ navigation }: any) {
@@ -84,10 +123,15 @@ function MainTabs() {
       <Tab.Screen
         name="Feed"
         component={FeedScreen}
-        options={({ navigation }) => ({
+        options={({ navigation, route }) => ({
           title: 'Главная',
-          headerTitle: 'Etemo',
-          headerRight: () => <SearchButton navigation={navigation} />,
+          headerTitle: () => (
+            <FeedHeader
+              navigation={navigation}
+              activeTab={(route.params as any)?.activeTab || 'all'}
+              onTabChange={(route.params as any)?.setActiveTab || (() => {})}
+            />
+          ),
         })}
       />
       <Tab.Screen
@@ -192,6 +236,49 @@ export default function MainNavigator() {
 }
 
 const styles = StyleSheet.create({
+  feedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    width: '100%',
+  },
+  logoText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  headerTabs: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.lightGray0,
+    borderRadius: 20,
+    padding: 2,
+    gap: 2,
+  },
+  headerTab: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 18,
+  },
+  headerTabActive: {
+    backgroundColor: COLORS.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  headerTabText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.gray4,
+  },
+  headerTabTextActive: {
+    color: COLORS.primary,
+  },
+  headerSearchIcon: {
+    padding: 4,
+  },
   searchIcon: {
     marginRight: 16,
     padding: 4,

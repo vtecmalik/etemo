@@ -41,6 +41,11 @@ export default function FeedScreen() {
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
 
+  // Update navigation params when tab changes
+  useEffect(() => {
+    navigation.setParams({ activeTab, setActiveTab } as any);
+  }, [activeTab, navigation]);
+
   useEffect(() => {
     checkAuth();
     setProducts([]);
@@ -124,11 +129,15 @@ export default function FeedScreen() {
         navigation.navigate('ProductResult', {
           barcode: item.barcode,
           product: {
-            id: item.barcode,
-            name_ru: item.name_ru,
             name_en: item.name_en,
-            img_url: item.img_url,
-            brand_name: item.brand_name_en,
+            name_ru: item.name_ru,
+            name_ko: null,
+            brand: item.brand_name_en,
+            brand_ko: null,
+            brand_logo: null,
+            img_url: item.img_url || null,
+            source: 'oleigh_products',
+            country: null,
             ingredients: null,
           },
         })
@@ -136,7 +145,7 @@ export default function FeedScreen() {
       style={styles.card}
     >
       <OptimizedImage
-        uri={item.img_url}
+        uri={item.img_url || null}
         width={72}
         height={72}
         borderRadius={BORDER_RADIUS.md}
@@ -171,30 +180,9 @@ export default function FeedScreen() {
     </View>
   );
 
-  const renderHeader = () => (
-    <View style={styles.tabsContainer}>
-      <TouchableOpacity
-        style={[styles.tab, activeTab === 'all' && styles.tabActive]}
-        onPress={() => setActiveTab('all')}
-      >
-        <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>Все</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.tab, activeTab === 'recommended' && styles.tabActive]}
-        onPress={() => setActiveTab('recommended')}
-      >
-        <Text style={[styles.tabText, activeTab === 'recommended' && styles.tabTextActive]}>
-          Рекомендованные
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   if (loading && !refreshing) {
     return (
       <View style={styles.container}>
-        {renderHeader()}
         <View style={styles.listContent}>
           {[1, 2, 3, 4, 5].map((i) => (
             <ProductCardSkeleton key={i} />
@@ -207,7 +195,6 @@ export default function FeedScreen() {
   if (activeTab === 'recommended' && !user) {
     return (
       <View style={styles.container}>
-        {renderHeader()}
         {renderAuthPrompt()}
       </View>
     );
@@ -228,7 +215,6 @@ export default function FeedScreen() {
         data={products}
         renderItem={renderProduct}
         keyExtractor={(item) => item.barcode}
-        ListHeaderComponent={renderHeader}
         ListFooterComponent={renderFooter}
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -247,35 +233,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: SPACING.lg,
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    marginBottom: SPACING.lg,
-    backgroundColor: COLORS.lightGray0,
-    borderRadius: BORDER_RADIUS.full,
-    padding: 4,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: BORDER_RADIUS.full,
-  },
-  tabActive: {
-    backgroundColor: COLORS.white,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.gray4,
-  },
-  tabTextActive: {
-    color: COLORS.primary,
   },
   card: {
     flexDirection: 'row',

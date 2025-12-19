@@ -160,7 +160,7 @@ export default function ProductResultScreen() {
     >
       {/* Product Image */}
       <View style={styles.imageContainer}>
-        <ProductImage uri={product.img_url} size={240} />
+        <ProductImage uri={product.img_url} size={228} />
       </View>
 
       {/* Product Info Card */}
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.md, gap: SPACING.md },
   brandName: { fontSize: 14, fontWeight: '500', color: COLORS.primary },
-  productTitle: { fontSize: 18, fontWeight: '700', color: COLORS.primary, lineHeight: 24, marginBottom: SPACING.lg },
+  productTitle: { fontSize: 16, fontWeight: '700', color: COLORS.primary, lineHeight: 24, marginBottom: SPACING.lg },
   detailRow: { flexDirection: 'row', marginBottom: SPACING.sm },
   detailLabel: { fontSize: 14, fontWeight: '500', color: COLORS.primary, marginRight: SPACING.xs },
   detailValue: { fontSize: 14, color: COLORS.gray4, flex: 1 },
