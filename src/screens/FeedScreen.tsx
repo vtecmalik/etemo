@@ -4,12 +4,13 @@ import {
   Text,
   StyleSheet,
   FlatList,
+  TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { supabase } from '../services/supabase';
+import { supabase, authService } from '../services/supabase';
 import { COLORS, SPACING, BORDER_RADIUS } from '../constants/theme';
 import { RootStackParamList } from '../navigation/types';
 import { TouchableScale } from '../components/TouchableScale';
@@ -18,8 +19,9 @@ import { ProductCardSkeleton } from '../components/Skeleton';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+type TabType = 'all' | 'recommended';
+
 interface Product {
-  id: string;
   barcode: string;
   name: string;
   brand: string;
@@ -28,17 +30,28 @@ interface Product {
 
 export default function FeedScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const [activeTab, setActiveTab] = useState<TabType>('all');
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
 
   useEffect(() => {
+    checkAuth();
+    setProducts([]);
+    setPage(0);
+    setHasMore(true);
     loadProducts(true);
-  }, []);
+  }, [activeTab]);
+
+  const checkAuth = async () => {
+    const currentUser = await authService.getCurrentUser();
+    setUser(currentUser);
+  };
 
   const loadProducts = async (reset = false) => {
     try {
@@ -55,9 +68,9 @@ export default function FeedScreen() {
       // Получаем продукты из oleigh_products
       const { data: productsData, error: productsError } = await supabase
         .from('oleigh_products')
-        .select('id, barcode, name, brand, image_url')
+        .select('barcode, name, brand, image_url')
         .range(offset, offset + PAGE_SIZE - 1)
-        .order('id', { ascending: false });
+        .order('barcode', { ascending: false });
 
       if (productsError) throw productsError;
 
@@ -141,14 +154,60 @@ export default function FeedScreen() {
     </TouchableScale>
   );
 
+  const renderAuthPrompt = () => (
+    <View style={styles.authPrompt}>
+      <Text style={styles.authPromptEmoji}>🔒</Text>
+      <Text style={styles.authPromptTitle}>Персональные рекомендации</Text>
+      <Text style={styles.authPromptText}>
+        Войдите в систему и заполните анкету о вашей коже, чтобы получать индивидуальные рекомендации
+      </Text>
+      <TouchableOpacity
+        style={styles.authButton}
+        onPress={() => navigation.navigate('Login')}
+      >
+        <Text style={styles.authButtonText}>Войти или зарегистрироваться</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderHeader = () => (
+    <View style={styles.tabsContainer}>
+      <TouchableOpacity
+        style={[styles.tab, activeTab === 'all' && styles.tabActive]}
+        onPress={() => setActiveTab('all')}
+      >
+        <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>Все</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.tab, activeTab === 'recommended' && styles.tabActive]}
+        onPress={() => setActiveTab('recommended')}
+      >
+        <Text style={[styles.tabText, activeTab === 'recommended' && styles.tabTextActive]}>
+          Рекомендованные
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   if (loading && !refreshing) {
     return (
       <View style={styles.container}>
+        {renderHeader()}
         <View style={styles.listContent}>
           {[1, 2, 3, 4, 5].map((i) => (
             <ProductCardSkeleton key={i} />
           ))}
         </View>
+      </View>
+    );
+  }
+
+  if (activeTab === 'recommended' && !user) {
+    return (
+      <View style={styles.container}>
+        {renderHeader()}
+        {renderAuthPrompt()}
       </View>
     );
   }
@@ -168,6 +227,7 @@ export default function FeedScreen() {
         data={products}
         renderItem={renderProduct}
         keyExtractor={(item) => item.barcode}
+        ListHeaderComponent={renderHeader}
         ListFooterComponent={renderFooter}
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -186,6 +246,35 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: SPACING.lg,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    marginBottom: SPACING.lg,
+    backgroundColor: COLORS.lightGray0,
+    borderRadius: BORDER_RADIUS.full,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: BORDER_RADIUS.full,
+  },
+  tabActive: {
+    backgroundColor: COLORS.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.gray4,
+  },
+  tabTextActive: {
+    color: COLORS.primary,
   },
   card: {
     flexDirection: 'row',
@@ -220,6 +309,41 @@ const styles = StyleSheet.create({
   cardMeta: {
     fontSize: 11,
     color: COLORS.gray4,
+  },
+  authPrompt: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.xl,
+  },
+  authPromptEmoji: {
+    fontSize: 64,
+    marginBottom: SPACING.lg,
+  },
+  authPromptTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginBottom: SPACING.sm,
+    textAlign: 'center',
+  },
+  authPromptText: {
+    fontSize: 14,
+    color: COLORS.gray4,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: SPACING.xl,
+  },
+  authButton: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: BORDER_RADIUS.full,
+  },
+  authButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '600',
   },
   footer: {
     paddingVertical: SPACING.lg,
