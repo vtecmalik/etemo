@@ -25,6 +25,7 @@ import { TouchableScale } from '../components/TouchableScale';
 import { ProductImage, BrandLogo } from '../components/OptimizedImage';
 import { ProductDetailSkeleton } from '../components/Skeleton';
 import { LOADING_IMAGES } from '../constants/loadingImages';
+import { IngredientsRingIndicator } from '../components/IngredientsRingIndicator';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type RouteProps = RouteProp<RootStackParamList, 'ProductResult'>;
@@ -34,10 +35,12 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 // Компонент для плавного перехода от анимации к картинке продукта
 function AnimatedProductCircle({
   loading,
-  imageUri
+  imageUri,
+  ingredientsStats
 }: {
   loading: boolean;
   imageUri: string | null;
+  ingredientsStats?: { safe: number; medium: number; high: number; unknown: number };
 }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -104,6 +107,17 @@ function AnimatedProductCircle({
 
   return (
     <View style={styles.animatedCircleContainer}>
+      {/* Цветное кольцо-индикатор ингредиентов */}
+      {!loading && ingredientsStats && (
+        <IngredientsRingIndicator
+          safe={ingredientsStats.safe}
+          medium={ingredientsStats.medium}
+          high={ingredientsStats.high}
+          unknown={ingredientsStats.unknown}
+          size={circleSize + 16}
+        />
+      )}
+
       <View
         style={[
           styles.animatedCircle,
@@ -272,7 +286,7 @@ export default function ProductResultScreen() {
 
   // Статистика ингредиентов
   const getIngredientsStats = useCallback((data: IngredientsData | null) => {
-    if (!data) return { safe: 0, medium: 0, high: 0, total: 0 };
+    if (!data) return { safe: 0, medium: 0, high: 0, unknown: 0, total: 0 };
 
     let ingredients: any[] = [];
     if (data.type === 'regular' && data.ingredients) {
@@ -287,19 +301,22 @@ export default function ProductResultScreen() {
       return nums ? Math.max(...nums.map(Number)) : null;
     };
 
-    let safe = 0, medium = 0, high = 0;
+    let safe = 0, medium = 0, high = 0, unknown = 0;
     ingredients.forEach(ing => {
       const risk = getMaxRisk(ing.risk_score);
-      if (risk === null) return;
+      if (risk === null) {
+        unknown++;
+        return;
+      }
       if (risk <= 2) safe++;
       else if (risk <= 6) medium++;
       else high++;
     });
 
-    return { safe, medium, high, total: ingredients.length };
+    return { safe, medium, high, unknown, total: ingredients.length };
   }, []);
 
-  const stats = product ? getIngredientsStats(product.ingredients) : { safe: 0, medium: 0, high: 0, total: 0 };
+  const stats = product ? getIngredientsStats(product.ingredients) : { safe: 0, medium: 0, high: 0, unknown: 0, total: 0 };
 
   return (
     <ScrollView
@@ -314,6 +331,7 @@ export default function ProductResultScreen() {
       <AnimatedProductCircle
         loading={loading}
         imageUri={product?.img_url || null}
+        ingredientsStats={stats.total > 0 ? stats : undefined}
       />
 
       {/* Error state */}
@@ -401,8 +419,6 @@ export default function ProductResultScreen() {
         </View>
       </TouchableScale>
 
-      {/* Barcode */}
-      <Text style={styles.barcodeText}>Штрих-код: {barcode}</Text>
       </>
       )}
 
@@ -645,12 +661,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
+    overflow: 'visible',
   },
   loadingText: {
     marginTop: SPACING.lg,

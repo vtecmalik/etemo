@@ -63,7 +63,7 @@ const HistoryCard = React.memo(function HistoryCard({
           {item.product.name_ru || item.product.name_en}
         </Text>
         <Text style={styles.cardMeta}>
-          {item.barcode} · {formattedDate}
+          {formattedDate}
         </Text>
       </View>
     </TouchableScale>

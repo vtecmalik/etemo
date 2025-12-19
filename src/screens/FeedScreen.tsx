@@ -157,9 +157,6 @@ export default function FeedScreen() {
         <Text style={styles.cardName} numberOfLines={2}>
           {item.name_ru || item.name_en}
         </Text>
-        <Text style={styles.cardMeta}>
-          {item.barcode}
-        </Text>
       </View>
     </TouchableScale>
   );
