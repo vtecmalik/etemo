@@ -40,8 +40,8 @@ export function IngredientsRingIndicator({
   }, [expanded, scaleAnim]);
 
   // Ширина кольца и отступ
-  const baseStrokeWidth = 12;
-  const expandedStrokeWidth = 16;
+  const baseStrokeWidth = 16;
+  const expandedStrokeWidth = 24;
   const strokeWidth = expanded ? expandedStrokeWidth : baseStrokeWidth;
 
   // При сжатом - вплотную, при расширенном - с отступом
