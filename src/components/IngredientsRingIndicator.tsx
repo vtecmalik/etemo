@@ -44,9 +44,9 @@ export function IngredientsRingIndicator({
   const expandedStrokeWidth = 18; // Толстое при тапе
   const strokeWidth = expanded ? expandedStrokeWidth : baseStrokeWidth;
 
-  // При расширении - отходит наружу
-  const baseRadius = (size / 2) - (baseStrokeWidth / 2);
-  const expandedRadius = (size / 2) + 8; // Наружу на 8px
+  // При расширении - отходит наружу, но остается в контейнере
+  const baseRadius = (size / 2) - (baseStrokeWidth / 2) - 12; // Отступ от края
+  const expandedRadius = (size / 2) - (expandedStrokeWidth / 2) - 2; // Почти до края
   const radius = expanded ? expandedRadius : baseRadius;
   const circumference = 2 * Math.PI * radius;
 
