@@ -9,7 +9,7 @@ interface IngredientsRingIndicatorProps {
   high: number;
   unknown: number;
   size: number;
-  onPress?: () => void;
+  expanded?: boolean;
 }
 
 export function IngredientsRingIndicator({
@@ -18,9 +18,8 @@ export function IngredientsRingIndicator({
   high,
   unknown,
   size,
-  onPress
+  expanded = false
 }: IngredientsRingIndicatorProps) {
-  const [expanded, setExpanded] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const total = safe + medium + high + unknown;
@@ -41,13 +40,13 @@ export function IngredientsRingIndicator({
   }, [expanded, scaleAnim]);
 
   // Ширина кольца и отступ
-  const baseStrokeWidth = 6;
-  const expandedStrokeWidth = 10;
+  const baseStrokeWidth = 12;
+  const expandedStrokeWidth = 16;
   const strokeWidth = expanded ? expandedStrokeWidth : baseStrokeWidth;
 
   // При сжатом - вплотную, при расширенном - с отступом
   const baseRadius = (size / 2) - (baseStrokeWidth / 2);
-  const expandedRadius = (size / 2) - (expandedStrokeWidth / 2) - 4;
+  const expandedRadius = (size / 2) - (expandedStrokeWidth / 2) - 6;
   const radius = expanded ? expandedRadius : baseRadius;
   const circumference = 2 * Math.PI * radius;
 
@@ -67,11 +66,6 @@ export function IngredientsRingIndicator({
     segments.push({ color: COLORS.riskUnknown, count: unknown, percent: unknown / total, label: 'Неопр.' });
   }
 
-  const handlePress = () => {
-    setExpanded(!expanded);
-    onPress?.();
-  };
-
   // Вычисляем offset для каждого сегмента
   let currentOffset = 0;
 
@@ -80,9 +74,10 @@ export function IngredientsRingIndicator({
       position: 'absolute',
       width: size,
       height: size,
-      transform: [{ scale: scaleAnim }]
+      transform: [{ scale: scaleAnim }],
+      pointerEvents: 'none'
     }}>
-      <Pressable onPress={handlePress} style={{ width: size, height: size }}>
+      <View style={{ width: size, height: size }}>
         <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
           {segments.map((segment, index) => {
             const segmentLength = segment.percent * circumference;
@@ -100,7 +95,7 @@ export function IngredientsRingIndicator({
                 fill="none"
                 strokeDasharray={`${segmentLength} ${circumference}`}
                 strokeDashoffset={-offset}
-                strokeLinecap="butt"
+                strokeLinecap="round"
               />
             );
           })}
@@ -139,7 +134,7 @@ export function IngredientsRingIndicator({
           </View>
         );
       })}
-      </Pressable>
+      </View>
     </Animated.View>
   );
 }

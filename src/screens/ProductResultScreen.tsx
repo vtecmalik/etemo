@@ -37,12 +37,14 @@ function AnimatedProductCircle({
   loading,
   imageUri,
   ingredientsStats,
-  onImagePress
+  onImagePress,
+  ringExpanded
 }: {
   loading: boolean;
   imageUri: string | null;
   ingredientsStats?: { safe: number; medium: number; high: number; unknown: number };
   onImagePress?: () => void;
+  ringExpanded?: boolean;
 }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -117,7 +119,7 @@ function AnimatedProductCircle({
           high={ingredientsStats.high}
           unknown={ingredientsStats.unknown}
           size={circleSize}
-          onPress={onImagePress}
+          expanded={ringExpanded}
         />
       )}
 
@@ -210,6 +212,7 @@ export default function ProductResultScreen() {
   const [brandInfo, setBrandInfo] = useState<{ name_en: string; name_ko: string | null; logo_url: string | null } | null>(null);
   const [ingredientsLoading, setIngredientsLoading] = useState(false);
   const [showIngredientsModal, setShowIngredientsModal] = useState(false);
+  const [ringExpanded, setRingExpanded] = useState(false);
   const stopPollingRef = useRef<(() => void) | null>(null);
 
   // Загрузка продукта
@@ -286,6 +289,7 @@ export default function ProductResultScreen() {
   const handleIngredientsPress = useCallback(() => {
     if (!product) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setRingExpanded(prev => !prev);
     setShowIngredientsModal(true);
   }, [product]);
 
@@ -338,6 +342,7 @@ export default function ProductResultScreen() {
         imageUri={product?.img_url || null}
         ingredientsStats={stats.total > 0 ? stats : undefined}
         onImagePress={handleIngredientsPress}
+        ringExpanded={ringExpanded}
       />
 
       {/* Error state */}
@@ -433,20 +438,29 @@ export default function ProductResultScreen() {
         visible={showIngredientsModal && !!product}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setShowIngredientsModal(false)}
+        onRequestClose={() => {
+          setShowIngredientsModal(false);
+          setRingExpanded(false);
+        }}
       >
         <View style={styles.modalOverlay}>
           <TouchableOpacity
             style={styles.modalBackdrop}
             activeOpacity={1}
-            onPress={() => setShowIngredientsModal(false)}
+            onPress={() => {
+              setShowIngredientsModal(false);
+              setRingExpanded(false);
+            }}
           />
           <View style={styles.modalContent}>
             {product && (
               <IngredientsModalContent
                 product={product}
                 ingredientsLoading={ingredientsLoading}
-                onClose={() => setShowIngredientsModal(false)}
+                onClose={() => {
+                  setShowIngredientsModal(false);
+                  setRingExpanded(false);
+                }}
               />
             )}
           </View>
