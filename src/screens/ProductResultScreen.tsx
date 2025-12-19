@@ -108,7 +108,7 @@ function AnimatedProductCircle({
   return (
     <View style={styles.animatedCircleContainer}>
       {/* Цветное кольцо-индикатор ингредиентов */}
-      {!loading && ingredientsStats && (
+      {!loading && ingredientsStats && false && (
         <IngredientsRingIndicator
           safe={ingredientsStats.safe}
           medium={ingredientsStats.medium}
