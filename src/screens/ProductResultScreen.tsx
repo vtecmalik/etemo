@@ -116,7 +116,8 @@ function AnimatedProductCircle({
     <View style={[styles.animatedCircleContainer, {
       width: ringContainerSize,
       height: ringContainerSize,
-      justifyContent: 'center'
+      justifyContent: 'center',
+      alignSelf: 'center'
     }]}>
       {/* Цветное кольцо-индикатор ингредиентов */}
       {!loading && ingredientsStats && (
