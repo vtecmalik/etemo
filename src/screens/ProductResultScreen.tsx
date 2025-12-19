@@ -113,7 +113,11 @@ function AnimatedProductCircle({
   }, [loading, loadingOpacity, productOpacity]);
 
   return (
-    <View style={styles.animatedCircleContainer}>
+    <View style={[styles.animatedCircleContainer, {
+      width: ringContainerSize,
+      height: ringContainerSize,
+      justifyContent: 'center'
+    }]}>
       {/* Цветное кольцо-индикатор ингредиентов */}
       {!loading && ingredientsStats && (
         <IngredientsRingIndicator
