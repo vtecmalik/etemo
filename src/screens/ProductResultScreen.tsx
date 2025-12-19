@@ -52,7 +52,10 @@ function AnimatedProductCircle({
   const productOpacity = useRef(new Animated.Value(0)).current;
 
   // Размеры круга - 64% от ширины экрана (уменьшено на 20% от 80%)
-  const circleSize = SCREEN_WIDTH * 0.64;
+  const ringContainerSize = SCREEN_WIDTH * 0.64;
+  // Белый круг = внутренний диаметр ободка
+  // Внутренний диаметр = size - 2 * (отступ 12 + половина толщины 5) = size - 44
+  const circleSize = ringContainerSize - 44;
   // Размер картинки - диагональ = диаметр круга, значит сторона = диаметр / √2
   const imageSize = circleSize * 0.707;
 
@@ -118,7 +121,7 @@ function AnimatedProductCircle({
           medium={ingredientsStats.medium}
           high={ingredientsStats.high}
           unknown={ingredientsStats.unknown}
-          size={circleSize}
+          size={ringContainerSize}
           expanded={ringExpanded}
         />
       )}
