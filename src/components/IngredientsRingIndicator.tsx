@@ -101,7 +101,7 @@ export function IngredientsRingIndicator({
           })}
         </Svg>
 
-      {/* Числа около сегментов при раскрытии */}
+      {/* Числа внутри круга при раскрытии */}
       {expanded && segments.map((segment, index) => {
         // Вычисляем позицию для каждого сегмента
         let accumulatedPercent = 0;
@@ -111,7 +111,7 @@ export function IngredientsRingIndicator({
         const midPercent = accumulatedPercent + (segment.percent / 2);
         const angle = midPercent * 360;
         const angleRad = ((angle - 90) * Math.PI) / 180;
-        const labelRadius = radius + strokeWidth + 20;
+        const labelRadius = radius - strokeWidth - 30; // Внутри круга
 
         const labelX = (size / 2) + (labelRadius * Math.cos(angleRad));
         const labelY = (size / 2) + (labelRadius * Math.sin(angleRad));
