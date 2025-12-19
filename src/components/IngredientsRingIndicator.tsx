@@ -75,7 +75,8 @@ export function IngredientsRingIndicator({
       width: size,
       height: size,
       transform: [{ scale: scaleAnim }],
-      pointerEvents: 'none'
+      pointerEvents: 'none',
+      zIndex: 10
     }}>
       <View style={{ width: size, height: size }}>
         <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
