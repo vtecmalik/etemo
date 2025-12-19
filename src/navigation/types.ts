@@ -10,9 +10,6 @@ export type RootStackParamList = {
     barcode: string;
     product?: Product; // Может быть передан из истории
   };
-  Ingredients: {
-    product: Product;
-  };
   Login: undefined;
   Questionnaire: {
     step: 'gender' | 'age' | 'skin_type' | 'skin_tone' | 'pregnancy';

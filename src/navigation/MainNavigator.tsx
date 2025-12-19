@@ -15,7 +15,6 @@ import ScannerScreen from '../screens/ScannerScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ProductResultScreen from '../screens/ProductResultScreen';
-import IngredientsScreen from '../screens/IngredientsScreen';
 import LoginScreen from '../screens/LoginScreen';
 import QuestionnaireScreen from '../screens/QuestionnaireScreen';
 import SearchScreen from '../screens/SearchScreen';
@@ -63,7 +62,7 @@ function FeedHeader({ navigation, activeTab, onTabChange }: any) {
           onPress={() => onTabChange('recommended')}
         >
           <Text style={[styles.headerTabText, activeTab === 'recommended' && styles.headerTabTextActive]}>
-            Рек.
+            Рекомендованные
           </Text>
         </TouchableOpacity>
       </View>
@@ -199,14 +198,6 @@ export default function MainNavigator() {
           }}
         />
         <Stack.Screen
-          name="Ingredients"
-          component={IngredientsScreen}
-          options={{
-            title: 'Ингредиенты',
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
           name="Login"
           component={LoginScreen}
           options={{
@@ -240,25 +231,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     width: '100%',
   },
   logoText: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '600',
     color: COLORS.primary,
   },
   headerTabs: {
     flexDirection: 'row',
     backgroundColor: COLORS.lightGray0,
-    borderRadius: 20,
-    padding: 2,
-    gap: 2,
+    borderRadius: 24,
+    padding: 3,
+    gap: 4,
   },
   headerTab: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 18,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
   },
   headerTabActive: {
     backgroundColor: COLORS.white,
@@ -269,7 +260,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   headerTabText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.gray4,
   },
@@ -284,6 +275,6 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   searchIconText: {
-    fontSize: 20,
+    fontSize: 24,
   },
 });
