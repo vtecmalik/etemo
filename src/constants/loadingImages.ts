@@ -1,9 +1,45 @@
 // Массив изображений для анимации загрузки
-// TODO: Добавить 40 изображений брендов косметики (WebP, ~200x200px, ~60KB каждое)
-// Временно используем заглушку
-export const LOADING_IMAGES: string[] = [
-  // Здесь будут пути к изображениям после их добавления в assets
-  // Пример: require('../assets/loading/brand1.webp'),
+export const LOADING_IMAGES = [
+  require('../assets/loading/beauty-1.jpg'),
+  require('../assets/loading/EUNYUL_logo.png'),
+  require('../assets/loading/beauty-2.jpg'),
+  require('../assets/loading/eyeNlip_logo.png'),
+  require('../assets/loading/beauty-3.jpg'),
+  require('../assets/loading/Faith_in_Face_logo.png'),
+  require('../assets/loading/beauty-4.jpg'),
+  require('../assets/loading/Farm_Stay_logo.png'),
+  require('../assets/loading/beauty-5.jpg'),
+  require('../assets/loading/Formal_Bee_logo.png'),
+  require('../assets/loading/beauty-6.jpg'),
+  require('../assets/loading/FULLight_logo.png'),
+  require('../assets/loading/beauty-7.jpg'),
+  require('../assets/loading/G9SKIN_logo.png'),
+  require('../assets/loading/beauty-9.png'),
+  require('../assets/loading/Glint_logo.png'),
+  require('../assets/loading/beauty-10.png'),
+  require('../assets/loading/glow_logo.png'),
+  require('../assets/loading/beauty-11.png'),
+  require('../assets/loading/GRAFEN_logo.png'),
+  require('../assets/loading/beauty-12.png'),
+  require('../assets/loading/GRAYMELIN_logo.png'),
+  require('../assets/loading/beauty-13.png'),
+  require('../assets/loading/GROWUS_logo.png'),
+  require('../assets/loading/haruharu_wonder_logo.jpg'),
+  require('../assets/loading/HATHERINE_logo.png'),
+  require('../assets/loading/HealGrids_logo.png'),
+  require('../assets/loading/heimish_logo.png'),
+  require('../assets/loading/hersteller_logo.png'),
+  require('../assets/loading/HEVEBLUE_logo.png'),
+  require('../assets/loading/hince_logo.png'),
+  require('../assets/loading/House_of_Balance_logo.png'),
+  require('../assets/loading/House_of_Hur_logo.png'),
+  require('../assets/loading/HYGGEE_logo.jpg'),
+  require('../assets/loading/a8a72245-1fc7-43ab-8038-baa1a97433f3_rw_1920.jpg'),
+  require('../assets/loading/b25fe4124744797.Y3JvcCwxNDAwLDEwOTUsMCww.jpg'),
+  require('../assets/loading/cc8d661d-bd11-49a3-a4c4-97a0bd6fd1a5_rw_1920.jpg'),
+  require('../assets/loading/contemporary-mirror-lipstick-london-600.jpg'),
+  require('../assets/loading/d3592a97162837.Y3JvcCwxNDAwLDEwOTUsMCwxNTI.jpg'),
+  require('../assets/loading/paul-krokos-lipstick-contemporary-art-photography-16-lipstick-heads-600.jpg'),
 ];
 
 export const PRELOAD_COUNT = 40;

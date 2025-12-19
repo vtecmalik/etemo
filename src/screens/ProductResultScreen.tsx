@@ -34,6 +34,7 @@ export default function ProductResultScreen() {
   const [product, setProduct] = useState<Product | null>(initialProduct || null);
   const [loading, setLoading] = useState(!initialProduct);
   const [error, setError] = useState('');
+  const [brandInfo, setBrandInfo] = useState<{ name_en: string; name_ko: string | null; logo_url: string | null } | null>(null);
   const [ingredientsLoading, setIngredientsLoading] = useState(false);
   const [showIngredientsModal, setShowIngredientsModal] = useState(false);
   const stopPollingRef = useRef<(() => void) | null>(null);
@@ -42,8 +43,19 @@ export default function ProductResultScreen() {
   const loadProduct = useCallback(async () => {
     setLoading(true);
     setError('');
+    setBrandInfo(null);
 
+    const startTime = Date.now();
+
+    // API делает парсинг внешних сайтов (может занять 10-15 секунд)
     const response = await apiService.searchByBarcode(barcode);
+
+    // Минимум 5 секунд показываем анимацию для UX
+    const elapsedTime = Date.now() - startTime;
+    const remainingTime = Math.max(0, 5000 - elapsedTime);
+    if (remainingTime > 0) {
+      await new Promise(resolve => setTimeout(resolve, remainingTime));
+    }
 
     if (response.found && response.result) {
       setProduct(response.result);
@@ -66,6 +78,10 @@ export default function ProductResultScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       setError(response.error || 'Продукт не найден');
+      // Сохраняем информацию о бренде из ответа API
+      if (response.brand) {
+        setBrandInfo(response.brand);
+      }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
 
@@ -147,10 +163,23 @@ export default function ProductResultScreen() {
   if (error) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorEmoji}>😕</Text>
-        <Text style={styles.errorTitle}>Продукт не найден</Text>
-        <Text style={styles.errorText}>{error}</Text>
-        <Text style={styles.errorBarcode}>{barcode}</Text>
+        {brandInfo ? (
+          <>
+            <BrandLogo uri={brandInfo.logo_url} size={80} />
+            <Text style={styles.errorBrandName}>{brandInfo.name_ko || brandInfo.name_en}</Text>
+            <Text style={styles.errorTitle}>Продукт не найден в базе</Text>
+            <Text style={styles.errorText}>
+              Этот продукт от бренда {brandInfo.name_en} пока отсутствует в нашей базе данных
+            </Text>
+          </>
+        ) : (
+          <>
+            <Text style={styles.errorEmoji}>😕</Text>
+            <Text style={styles.errorTitle}>Продукт не найден</Text>
+            <Text style={styles.errorText}>{error}</Text>
+          </>
+        )}
+        <Text style={styles.errorBarcode}>Штрих-код: {barcode}</Text>
       </View>
     );
   }
@@ -512,9 +541,10 @@ const styles = StyleSheet.create({
   barcodeText: { fontSize: 12, color: COLORS.gray4, textAlign: 'center' },
   errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: SPACING.xl, backgroundColor: COLORS.background },
   errorEmoji: { fontSize: 64, marginBottom: SPACING.lg },
+  errorBrandName: { fontSize: 20, fontWeight: '600', color: COLORS.primary, marginTop: SPACING.md, marginBottom: SPACING.sm },
   errorTitle: { fontSize: 18, fontWeight: '600', color: COLORS.primary, marginBottom: SPACING.sm },
   errorText: { fontSize: 14, color: COLORS.gray4, textAlign: 'center', marginBottom: SPACING.md },
-  errorBarcode: { fontSize: 12, color: COLORS.gray4 },
+  errorBarcode: { fontSize: 12, color: COLORS.gray4, marginTop: SPACING.md },
 
   // Modal styles
   modalOverlay: {
