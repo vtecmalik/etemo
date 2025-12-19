@@ -286,10 +286,15 @@ export default function ProductResultScreen() {
     };
   }, [barcode, initialProduct, loadProduct]);
 
-  const handleIngredientsPress = useCallback(() => {
+  const handleImagePress = useCallback(() => {
     if (!product) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setRingExpanded(prev => !prev);
+  }, [product]);
+
+  const handleIngredientsButtonPress = useCallback(() => {
+    if (!product) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setShowIngredientsModal(true);
   }, [product]);
 
@@ -341,7 +346,7 @@ export default function ProductResultScreen() {
         loading={loading}
         imageUri={product?.img_url || null}
         ingredientsStats={stats.total > 0 ? stats : undefined}
-        onImagePress={handleIngredientsPress}
+        onImagePress={handleImagePress}
         ringExpanded={ringExpanded}
       />
 
@@ -410,7 +415,7 @@ export default function ProductResultScreen() {
       </View>
 
       {/* Ingredients Button */}
-      <TouchableScale style={styles.ingredientsButton} onPress={handleIngredientsPress}>
+      <TouchableScale style={styles.ingredientsButton} onPress={handleIngredientsButtonPress}>
         <View style={styles.ingredientsButtonContent}>
           <Text style={styles.ingredientsIcon}>💧</Text>
           <View style={styles.ingredientsInfo}>
@@ -440,7 +445,6 @@ export default function ProductResultScreen() {
         animationType="fade"
         onRequestClose={() => {
           setShowIngredientsModal(false);
-          setRingExpanded(false);
         }}
       >
         <View style={styles.modalOverlay}>
@@ -449,7 +453,6 @@ export default function ProductResultScreen() {
             activeOpacity={1}
             onPress={() => {
               setShowIngredientsModal(false);
-              setRingExpanded(false);
             }}
           />
           <View style={styles.modalContent}>
@@ -459,7 +462,6 @@ export default function ProductResultScreen() {
                 ingredientsLoading={ingredientsLoading}
                 onClose={() => {
                   setShowIngredientsModal(false);
-                  setRingExpanded(false);
                 }}
               />
             )}
