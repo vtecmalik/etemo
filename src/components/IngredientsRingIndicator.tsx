@@ -40,15 +40,18 @@ export function IngredientsRingIndicator({
   }, [expanded, scaleAnim]);
 
   // Ширина кольца и отступ
-  const baseStrokeWidth = 16;
-  const expandedStrokeWidth = 24;
+  const baseStrokeWidth = 10; // Тонкое по умолчанию
+  const expandedStrokeWidth = 18; // Толстое при тапе
   const strokeWidth = expanded ? expandedStrokeWidth : baseStrokeWidth;
 
-  // При сжатом - вплотную, при расширенном - с отступом
+  // При расширении - отходит наружу
   const baseRadius = (size / 2) - (baseStrokeWidth / 2);
-  const expandedRadius = (size / 2) - (expandedStrokeWidth / 2) - 6;
+  const expandedRadius = (size / 2) + 8; // Наружу на 8px
   const radius = expanded ? expandedRadius : baseRadius;
   const circumference = 2 * Math.PI * radius;
+
+  // Промежуток между сегментами
+  const gap = 4;
 
   // Массив сегментов - ЗЕЛЕНЫЙ ПЕРВЫМ (с 12 часов)
   const segments: { color: string; count: number; percent: number; label: string }[] = [];
@@ -94,7 +97,7 @@ export function IngredientsRingIndicator({
                 stroke={segment.color}
                 strokeWidth={strokeWidth}
                 fill="none"
-                strokeDasharray={`${segmentLength} ${circumference}`}
+                strokeDasharray={`${segmentLength - gap} ${circumference - segmentLength + gap}`}
                 strokeDashoffset={-offset}
                 strokeLinecap="round"
               />
@@ -102,20 +105,22 @@ export function IngredientsRingIndicator({
           })}
         </Svg>
 
-      {/* Числа внутри круга при раскрытии */}
+      {/* Числа снаружи при раскрытии - по диагонали */}
       {expanded && segments.map((segment, index) => {
-        // Вычисляем позицию для каждого сегмента
-        let accumulatedPercent = 0;
-        for (let i = 0; i < index; i++) {
-          accumulatedPercent += segments[i].percent;
-        }
-        const midPercent = accumulatedPercent + (segment.percent / 2);
-        const angle = midPercent * 360;
-        const angleRad = ((angle - 90) * Math.PI) / 180;
-        const labelRadius = radius - strokeWidth - 30; // Внутри круга
+        // Позиции по диагонали: 4:30 (135°) и 10:30 (315°)
+        const positions = [
+          { angle: 135, offsetY: -30 * index }, // Правый верх
+          { angle: 135, offsetY: -30 * (index - 1) },
+          { angle: 315, offsetY: -30 * (index - 2) }, // Левый низ
+          { angle: 315, offsetY: -30 * (index - 3) }
+        ];
+
+        const pos = positions[index] || positions[0];
+        const angleRad = (pos.angle * Math.PI) / 180;
+        const labelRadius = radius + strokeWidth + 25; // Снаружи
 
         const labelX = (size / 2) + (labelRadius * Math.cos(angleRad));
-        const labelY = (size / 2) + (labelRadius * Math.sin(angleRad));
+        const labelY = (size / 2) + (labelRadius * Math.sin(angleRad)) + pos.offsetY;
 
         return (
           <View
