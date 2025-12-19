@@ -73,10 +73,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   circle: {
-    backgroundColor: '#000',
+    backgroundColor: COLORS.white,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   image: {
     // Изображение будет центрировано в круге

@@ -8,6 +8,9 @@ import {
   Modal,
   TouchableOpacity,
   FlatList,
+  Animated,
+  Dimensions,
+  Image,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -21,10 +24,161 @@ import { storageService } from '../services/storage';
 import { TouchableScale } from '../components/TouchableScale';
 import { ProductImage, BrandLogo } from '../components/OptimizedImage';
 import { ProductDetailSkeleton } from '../components/Skeleton';
-import { LoadingAnimation } from '../components/LoadingAnimation';
+import { LOADING_IMAGES } from '../constants/loadingImages';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type RouteProps = RouteProp<RootStackParamList, 'ProductResult'>;
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Компонент для плавного перехода от анимации к картинке продукта
+function AnimatedProductCircle({
+  loading,
+  imageUri
+}: {
+  loading: boolean;
+  imageUri: string | null;
+}) {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const loadingOpacity = useRef(new Animated.Value(1)).current;
+  const productOpacity = useRef(new Animated.Value(0)).current;
+
+  // Размеры круга - 80% от ширины экрана
+  const circleSize = SCREEN_WIDTH * 0.8;
+  // Размер картинки - диагональ = диаметр круга, значит сторона = диаметр / √2
+  const imageSize = circleSize * 0.707;
+
+  // Анимация смены картинок в загрузке
+  useEffect(() => {
+    if (!loading || LOADING_IMAGES.length === 0) return;
+
+    const interval = setInterval(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 50,
+        useNativeDriver: true,
+      }).start(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % LOADING_IMAGES.length);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 50,
+          useNativeDriver: true,
+        }).start();
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [loading, fadeAnim]);
+
+  // Плавный переход от анимации к картинке продукта
+  useEffect(() => {
+    if (loading) {
+      Animated.parallel([
+        Animated.timing(loadingOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(productOpacity, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(loadingOpacity, {
+          toValue: 0,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(productOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [loading, loadingOpacity, productOpacity]);
+
+  return (
+    <View style={styles.animatedCircleContainer}>
+      <View
+        style={[
+          styles.animatedCircle,
+          {
+            width: circleSize,
+            height: circleSize,
+            borderRadius: circleSize / 2
+          }
+        ]}
+      >
+        {/* Анимация загрузки */}
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              opacity: loadingOpacity,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }
+          ]}
+          pointerEvents={loading ? 'auto' : 'none'}
+        >
+          {LOADING_IMAGES.length > 0 && (
+            <Animated.View style={{ opacity: fadeAnim }}>
+              <Image
+                source={LOADING_IMAGES[currentImageIndex] as any}
+                style={{
+                  width: imageSize,
+                  height: imageSize,
+                }}
+                resizeMode="contain"
+              />
+            </Animated.View>
+          )}
+        </Animated.View>
+
+        {/* Картинка продукта */}
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              opacity: productOpacity,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }
+          ]}
+          pointerEvents={loading ? 'none' : 'auto'}
+        >
+          {imageUri && (
+            <Image
+              source={{ uri: imageUri }}
+              style={{
+                width: imageSize,
+                height: imageSize,
+              }}
+              resizeMode="contain"
+            />
+          )}
+        </Animated.View>
+      </View>
+
+      {/* Текст загрузки */}
+      {loading && (
+        <Animated.Text
+          style={[
+            styles.loadingText,
+            { opacity: loadingOpacity }
+          ]}
+        >
+          Идёт проверка базы данных, пожалуйста, подождите
+        </Animated.Text>
+      )}
+    </View>
+  );
+}
 
 export default function ProductResultScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -145,48 +299,7 @@ export default function ProductResultScreen() {
     return { safe, medium, high, total: ingredients.length };
   }, []);
 
-  // Loading state
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.loadingAnimationContainer}>
-          <LoadingAnimation size={240} />
-          <Text style={styles.loadingAnimationText}>
-            Идёт проверка базы данных, пожалуйста, подождите
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        {brandInfo ? (
-          <>
-            <BrandLogo uri={brandInfo.logo_url} size={80} />
-            <Text style={styles.errorBrandName}>{brandInfo.name_ko || brandInfo.name_en}</Text>
-            <Text style={styles.errorTitle}>Продукт не найден в базе</Text>
-            <Text style={styles.errorText}>
-              Этот продукт от бренда {brandInfo.name_en} пока отсутствует в нашей базе данных
-            </Text>
-          </>
-        ) : (
-          <>
-            <Text style={styles.errorEmoji}>😕</Text>
-            <Text style={styles.errorTitle}>Продукт не найден</Text>
-            <Text style={styles.errorText}>{error}</Text>
-          </>
-        )}
-        <Text style={styles.errorBarcode}>Штрих-код: {barcode}</Text>
-      </View>
-    );
-  }
-
-  if (!product) return null;
-
-  const stats = getIngredientsStats(product.ingredients);
+  const stats = product ? getIngredientsStats(product.ingredients) : { safe: 0, medium: 0, high: 0, total: 0 };
 
   return (
     <ScrollView
@@ -194,15 +307,41 @@ export default function ProductResultScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl refreshing={loading} onRefresh={loadProduct} tintColor={COLORS.primary} />
+        <RefreshControl refreshing={false} onRefresh={loadProduct} tintColor={COLORS.primary} />
       }
     >
-      {/* Product Image */}
-      <View style={styles.imageContainer}>
-        <ProductImage uri={product.img_url} size={228} />
-      </View>
+      {/* Animated Circle - плавный переход от загрузки к продукту */}
+      <AnimatedProductCircle
+        loading={loading}
+        imageUri={product?.img_url || null}
+      />
+
+      {/* Error state */}
+      {error && !loading && (
+        <View style={styles.errorSection}>
+          {brandInfo ? (
+            <>
+              <BrandLogo uri={brandInfo.logo_url} size={60} />
+              <Text style={styles.errorBrandName}>{brandInfo.name_ko || brandInfo.name_en}</Text>
+              <Text style={styles.errorTitle}>Продукт не найден в базе</Text>
+              <Text style={styles.errorText}>
+                Этот продукт от бренда {brandInfo.name_en} пока отсутствует в нашей базе данных
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.errorEmoji}>😕</Text>
+              <Text style={styles.errorTitle}>Продукт не найден</Text>
+              <Text style={styles.errorText}>{error}</Text>
+            </>
+          )}
+          <Text style={styles.errorBarcode}>Штрих-код: {barcode}</Text>
+        </View>
+      )}
 
       {/* Product Info Card */}
+      {product && !loading && (
+      <>
       <View style={styles.card}>
         {/* Brand */}
         <View style={styles.brandRow}>
@@ -248,7 +387,7 @@ export default function ProductResultScreen() {
           <View style={styles.ingredientsInfo}>
             <Text style={styles.ingredientsTitle}>
               Безопасность ингредиентов
-              {ingredientsLoading && <Text style={styles.loadingText}> (загрузка...)</Text>}
+              {ingredientsLoading && <Text style={{ fontWeight: '400', color: COLORS.gray4 }}> (загрузка...)</Text>}
               {!ingredientsLoading && stats.total > 0 && ` (${stats.total})`}
             </Text>
             {!ingredientsLoading && stats.total > 0 && (stats.medium + stats.high) > 0 && (
@@ -264,8 +403,11 @@ export default function ProductResultScreen() {
 
       {/* Barcode */}
       <Text style={styles.barcodeText}>Штрих-код: {barcode}</Text>
+      </>
+      )}
 
       {/* Ingredients Modal */}
+      {product && (
       <Modal
         visible={showIngredientsModal}
         transparent={true}
@@ -287,6 +429,7 @@ export default function ProductResultScreen() {
           </View>
         </View>
       </Modal>
+      )}
     </ScrollView>
   );
 }
@@ -493,20 +636,35 @@ const StatsHeader = React.memo(function StatsHeader({ stats }: {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   content: { padding: SPACING.lg, paddingBottom: SPACING.xxxl },
-  loadingAnimationContainer: {
-    flex: 1,
+  animatedCircleContainer: {
+    alignItems: 'center',
+    marginBottom: SPACING.xl,
+    marginTop: SPACING.md,
+  },
+  animatedCircle: {
+    backgroundColor: COLORS.white,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: SPACING.xl,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  loadingAnimationText: {
-    marginTop: SPACING.xl,
+  loadingText: {
+    marginTop: SPACING.lg,
     fontSize: 14,
     color: COLORS.gray4,
     textAlign: 'center',
     lineHeight: 20,
+    paddingHorizontal: SPACING.xl,
   },
-  imageContainer: { alignItems: 'center', marginBottom: SPACING.lg },
+  errorSection: {
+    alignItems: 'center',
+    padding: SPACING.xl,
+    marginBottom: SPACING.lg,
+  },
   card: {
     backgroundColor: COLORS.white,
     borderRadius: BORDER_RADIUS.xl,
@@ -534,17 +692,15 @@ const styles = StyleSheet.create({
   ingredientsIcon: { fontSize: 24, marginRight: SPACING.md },
   ingredientsInfo: { flex: 1 },
   ingredientsTitle: { fontSize: 14, fontWeight: '600', color: COLORS.primary },
-  loadingText: { fontWeight: '400', color: COLORS.gray4 },
   ingredientsWarning: { fontSize: 12, color: COLORS.gray4, marginTop: 2 },
   warningCount: { color: COLORS.red, fontWeight: '600' },
   chevron: { fontSize: 24, color: COLORS.gray4 },
   barcodeText: { fontSize: 12, color: COLORS.gray4, textAlign: 'center' },
-  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: SPACING.xl, backgroundColor: COLORS.background },
-  errorEmoji: { fontSize: 64, marginBottom: SPACING.lg },
-  errorBrandName: { fontSize: 20, fontWeight: '600', color: COLORS.primary, marginTop: SPACING.md, marginBottom: SPACING.sm },
-  errorTitle: { fontSize: 18, fontWeight: '600', color: COLORS.primary, marginBottom: SPACING.sm },
-  errorText: { fontSize: 14, color: COLORS.gray4, textAlign: 'center', marginBottom: SPACING.md },
-  errorBarcode: { fontSize: 12, color: COLORS.gray4, marginTop: SPACING.md },
+  errorEmoji: { fontSize: 48, marginBottom: SPACING.md },
+  errorBrandName: { fontSize: 18, fontWeight: '600', color: COLORS.primary, marginTop: SPACING.sm, marginBottom: SPACING.xs, textAlign: 'center' },
+  errorTitle: { fontSize: 16, fontWeight: '600', color: COLORS.primary, marginBottom: SPACING.xs, textAlign: 'center' },
+  errorText: { fontSize: 14, color: COLORS.gray4, textAlign: 'center', marginBottom: SPACING.sm },
+  errorBarcode: { fontSize: 12, color: COLORS.gray4, marginTop: SPACING.sm },
 
   // Modal styles
   modalOverlay: {
