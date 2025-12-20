@@ -3,7 +3,7 @@
 export const COLORS = {
   // Primary
   primary: '#131518',
-  primaryLight: '#333',
+  primaryLight: 'rgba(19, 21, 24, 0.08)', // Светлый фон для выбранного таба
 
   // Background
   background: '#F5F5F8',

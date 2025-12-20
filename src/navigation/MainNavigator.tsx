@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList, MainTabParamList } from './types';
 import { COLORS, SPACING } from '../constants/theme';
+import { CustomTabBar } from '../components/CustomTabBar';
 
 // Screens
 import FeedScreen from '../screens/FeedScreen';
@@ -21,23 +22,6 @@ import SearchScreen from '../screens/SearchScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
-
-// Иконки для табов
-const TabIcon = ({ name, focused }: { name: string; focused: boolean }) => {
-  const icons: Record<string, string> = {
-    Feed: '🏠',
-    Favorites: '❤️',
-    Scanner: '📷',
-    History: '📋',
-    Profile: '👤',
-  };
-
-  return (
-    <View style={{ alignItems: 'center' }}>
-      <Text style={{ fontSize: 24 }}>{icons[name]}</Text>
-    </View>
-  );
-};
 
 // Кастомный хедер для Feed экрана с табами
 function FeedHeader({ navigation, activeTab, onTabChange }: any) {
@@ -91,25 +75,10 @@ function SearchButton({ navigation }: any) {
 }
 
 function MainTabs() {
-  const insets = useSafeAreaInsets();
-
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused }) => <TabIcon name={route.name} focused={focused} />,
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.gray4,
-        tabBarStyle: {
-          backgroundColor: COLORS.white,
-          borderTopColor: COLORS.greyLight,
-          height: 60 + insets.bottom,
-          paddingBottom: insets.bottom,
-          paddingTop: 8,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '500',
-        },
+      tabBar={(props) => <CustomTabBar {...props} />}
+      screenOptions={{
         headerStyle: {
           backgroundColor: COLORS.white,
         },
@@ -117,7 +86,7 @@ function MainTabs() {
           color: COLORS.primary,
           fontWeight: '600',
         },
-      })}
+      }}
     >
       <Tab.Screen
         name="Feed"
