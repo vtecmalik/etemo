@@ -31,23 +31,14 @@ interface TabButtonProps {
 
 function TabButton({ route, index, focused, onPress, label }: TabButtonProps) {
   const scaleAnim = useRef(new Animated.Value(focused ? 1 : 0)).current;
-  const widthAnim = useRef(new Animated.Value(focused ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: focused ? 1 : 0,
-        useNativeDriver: true,
-        tension: 50,
-        friction: 7,
-      }),
-      Animated.spring(widthAnim, {
-        toValue: focused ? 1 : 0,
-        useNativeDriver: false,
-        tension: 50,
-        friction: 7,
-      }),
-    ]).start();
+    Animated.spring(scaleAnim, {
+      toValue: focused ? 1 : 0,
+      useNativeDriver: false, // Используем false для всех анимаций включая width
+      tension: 50,
+      friction: 7,
+    }).start();
   }, [focused]);
 
   const getIcon = (routeName: string, focused: boolean) => {
@@ -82,7 +73,7 @@ function TabButton({ route, index, focused, onPress, label }: TabButtonProps) {
   });
 
   // Анимация ширины
-  const containerWidth = widthAnim.interpolate({
+  const containerWidth = scaleAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [48, 110], // Ширина: иконка только vs иконка + текст
   });
@@ -110,14 +101,6 @@ function TabButton({ route, index, focused, onPress, label }: TabButtonProps) {
           <Animated.View
             style={{
               opacity: scaleAnim,
-              transform: [
-                {
-                  scale: scaleAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.8, 1],
-                  }),
-                },
-              ],
             }}
           >
             <Text style={styles.tabLabel}>{label}</Text>
