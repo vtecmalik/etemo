@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Animated,
 } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -77,6 +78,11 @@ function TabItem({ route, index, isFocused, onPress, label, currentIndex }: TabI
 
   const { startColumn, columnSpan } = getItemPosition(index, currentIndex);
 
+  // Анимации
+  const animatedLeft = useRef(new Animated.Value(0)).current;
+  const animatedWidth = useRef(new Animated.Value(56)).current;
+  const animatedOpacity = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
+
   const centerScreen = SCREEN_WIDTH / 2;
   // Позиция 2 должна быть в центре экрана
   const gridOffset = centerScreen - 2.5 * COLUMN_WIDTH;
@@ -134,19 +140,42 @@ function TabItem({ route, index, isFocused, onPress, label, currentIndex }: TabI
     }
   };
 
+  // Обновляем анимации при изменении активности
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(animatedLeft, {
+        toValue: leftPosition,
+        useNativeDriver: false,
+        tension: 80,
+        friction: 10,
+      }),
+      Animated.spring(animatedWidth, {
+        toValue: itemWidth || 56,
+        useNativeDriver: false,
+        tension: 80,
+        friction: 10,
+      }),
+      Animated.timing(animatedOpacity, {
+        toValue: isFocused ? 1 : 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [isFocused, leftPosition, itemWidth]);
+
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress();
   };
 
   return (
-    <View
+    <Animated.View
       style={[
         styles.tabItem,
         {
           position: 'absolute',
-          left: leftPosition,
-          width: itemWidth,
+          left: animatedLeft,
+          width: animatedWidth,
         },
       ]}
     >
@@ -165,13 +194,11 @@ function TabItem({ route, index, isFocused, onPress, label, currentIndex }: TabI
         </View>
 
         {/* ТЕКСТ - показывается только у активного, центрируется в оставшемся месте */}
-        {isFocused && (
-          <View style={styles.textContainer}>
-            <Text style={styles.tabLabel}>{label}</Text>
-          </View>
-        )}
+        <Animated.View style={[styles.textContainer, { opacity: animatedOpacity }]}>
+          <Text style={styles.tabLabel}>{label}</Text>
+        </Animated.View>
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 }
 
