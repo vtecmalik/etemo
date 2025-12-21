@@ -17,6 +17,9 @@ import {
   ProfileIcon,
 } from './TabBarIcons';
 
+// Размер floating кнопки
+const FLOATING_BUTTON_SIZE = 60;
+
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
 
@@ -41,63 +44,85 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
   };
 
   return (
-    <View
-      style={[
-        styles.tabBarContainer,
-        {
-          paddingBottom: insets.bottom,
-          height: 60 + insets.bottom,
-        },
-      ]}
-    >
-      <View style={styles.tabBarContent}>
-        {state.routes.map((route, index) => {
-          const isFocused = state.index === index;
-          const { options } = descriptors[route.key];
-          const label = options.title || route.name;
+    <View style={styles.wrapper}>
+      <View
+        style={[
+          styles.tabBarContainer,
+          {
+            paddingBottom: insets.bottom,
+            height: 60 + insets.bottom,
+          },
+        ]}
+      >
+        <View style={styles.tabBarContent}>
+          {state.routes.map((route, index) => {
+            const isFocused = state.index === index;
+            const { options } = descriptors[route.key];
+            const label = options.title || route.name;
 
-          const onPress = () => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            const onPress = () => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
+              const event = navigation.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              });
 
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
+              if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate(route.name);
+              }
+            };
+
+            // Scanner - скрываем иконку, но оставляем место
+            if (route.name === 'Scanner') {
+              return <View key={route.key} style={styles.tabItem} />;
             }
-          };
 
-          return (
-            <TouchableOpacity
-              key={route.key}
-              onPress={onPress}
-              style={styles.tabItem}
-              activeOpacity={0.7}
-            >
-              <View style={styles.iconContainer}>
-                {getIcon(route.name, isFocused)}
-              </View>
-              <Text
-                style={[
-                  styles.tabLabel,
-                  { color: isFocused ? COLORS.primary : COLORS.gray4 },
-                ]}
-                numberOfLines={1}
+            return (
+              <TouchableOpacity
+                key={route.key}
+                onPress={onPress}
+                style={styles.tabItem}
+                activeOpacity={0.7}
               >
-                {label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+                <View style={styles.iconContainer}>
+                  {getIcon(route.name, isFocused)}
+                </View>
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    { color: isFocused ? COLORS.primary : COLORS.gray4 },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
+
+      {/* Floating кнопка Scanner */}
+      <TouchableOpacity
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          navigation.navigate('Scanner');
+        }}
+        style={styles.floatingButton}
+        activeOpacity={0.8}
+      >
+        <ScannerIcon size={28} color={COLORS.white} />
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    position: 'relative',
+  },
   tabBarContainer: {
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
@@ -128,5 +153,22 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 11,
     fontWeight: '500',
+  },
+  floatingButton: {
+    position: 'absolute',
+    top: -(FLOATING_BUTTON_SIZE / 2),
+    left: '50%',
+    marginLeft: -FLOATING_BUTTON_SIZE / 2,
+    width: FLOATING_BUTTON_SIZE,
+    height: FLOATING_BUTTON_SIZE,
+    borderRadius: FLOATING_BUTTON_SIZE / 2,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 12,
   },
 });
