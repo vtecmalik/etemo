@@ -15,7 +15,6 @@ export type RootStackParamList = {
     step: 'gender' | 'age' | 'skin_type' | 'skin_tone' | 'pregnancy';
   };
   Search: undefined;
-  Profile: undefined;
 };
 
 // Tab навигатор
