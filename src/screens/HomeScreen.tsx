@@ -88,7 +88,7 @@ export default function HomeScreen() {
               maxLength={13}
             />
             {barcode.length > 0 && (
-              <TouchableScale style={styles.clearButton} onPress={handleClear} activeScale={0.9}>
+              <TouchableScale style={styles.clearButton} onPress={handleClear}>
                 <Text style={styles.clearButtonText}>✕</Text>
               </TouchableScale>
             )}

@@ -13,7 +13,7 @@ import { CustomTabBar } from '../components/CustomTabBar';
 import FeedScreen from '../screens/FeedScreen';
 import FavoritesScreen from '../screens/FavoritesScreen';
 import ScannerScreen from '../screens/ScannerScreen';
-import HistoryScreen from '../screens/HistoryScreen';
+import ReviewWriteScreen from '../screens/ReviewWriteScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ProductResultScreen from '../screens/ProductResultScreen';
 import LoginScreen from '../screens/LoginScreen';
@@ -23,42 +23,17 @@ import SearchScreen from '../screens/SearchScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// Кастомный хедер для Feed экрана с табами
-function FeedHeader({ navigation, activeTab, onTabChange }: any) {
+// Кнопка профиля в хедере (левый верхний угол в кружке)
+function ProfileButton({ navigation }: any) {
   return (
-    <View style={styles.feedHeader}>
-      {/* Logo */}
-      <Text style={styles.logoText}>Etemo</Text>
-
-      {/* Tabs */}
-      <View style={styles.headerTabs}>
-        <TouchableOpacity
-          style={[styles.headerTab, activeTab === 'all' && styles.headerTabActive]}
-          onPress={() => onTabChange('all')}
-        >
-          <Text style={[styles.headerTabText, activeTab === 'all' && styles.headerTabTextActive]}>
-            Все
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.headerTab, activeTab === 'recommended' && styles.headerTabActive]}
-          onPress={() => onTabChange('recommended')}
-        >
-          <Text style={[styles.headerTabText, activeTab === 'recommended' && styles.headerTabTextActive]}>
-            Рекомендованные
-          </Text>
-        </TouchableOpacity>
+    <TouchableOpacity
+      onPress={() => navigation.navigate('Profile')}
+      style={styles.profileButton}
+    >
+      <View style={styles.profileCircle}>
+        <Text style={styles.profileIcon}>👤</Text>
       </View>
-
-      {/* Search Button */}
-      <TouchableOpacity
-        onPress={() => navigation.navigate('Search')}
-        style={styles.headerSearchIcon}
-      >
-        <Text style={styles.searchIconText}>🔍</Text>
-      </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -91,48 +66,39 @@ function MainTabs() {
       <Tab.Screen
         name="Feed"
         component={FeedScreen}
-        options={({ navigation, route }) => ({
-          title: 'Главная',
-          headerTitle: () => (
-            <FeedHeader
-              navigation={navigation}
-              activeTab={(route.params as any)?.activeTab || 'all'}
-              onTabChange={(route.params as any)?.setActiveTab || (() => {})}
-            />
-          ),
+        options={({ navigation }) => ({
+          title: 'Смотрю',
+          headerTitle: 'Etemo',
+          headerLeft: () => <ProfileButton navigation={navigation} />,
+          headerRight: () => <SearchButton navigation={navigation} />,
+        })}
+      />
+      <Tab.Screen
+        name="Scanner"
+        component={ScannerScreen}
+        options={({ navigation }) => ({
+          title: 'Ищу',
+          headerTitle: 'Сканер',
+          headerLeft: () => <ProfileButton navigation={navigation} />,
+        })}
+      />
+      <Tab.Screen
+        name="ReviewWrite"
+        component={ReviewWriteScreen}
+        options={({ navigation }) => ({
+          title: 'Пишу',
+          headerTitle: 'Написать отзыв',
+          headerLeft: () => <ProfileButton navigation={navigation} />,
         })}
       />
       <Tab.Screen
         name="Favorites"
         component={FavoritesScreen}
-        options={{
-          title: 'Избранное',
+        options={({ navigation }) => ({
+          title: 'Люблю',
           headerTitle: 'Избранное',
-        }}
-      />
-      <Tab.Screen
-        name="Scanner"
-        component={ScannerScreen}
-        options={{
-          title: 'Сканер',
-          headerTitle: 'Сканировать',
-        }}
-      />
-      <Tab.Screen
-        name="History"
-        component={HistoryScreen}
-        options={{
-          title: 'История',
-          headerTitle: 'История',
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          title: 'Профиль',
-          headerTitle: 'Мой профиль',
-        }}
+          headerLeft: () => <ProfileButton navigation={navigation} />,
+        })}
       />
     </Tab.Navigator>
   );
@@ -190,54 +156,33 @@ export default function MainNavigator() {
             presentation: 'card',
           }}
         />
+        <Stack.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{
+            title: 'Мой профиль',
+            presentation: 'card',
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  feedHeader: {
-    flexDirection: 'row',
+  profileButton: {
+    marginLeft: 16,
+  },
+  profileCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.primaryLight,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    width: '100%',
+    justifyContent: 'center',
   },
-  logoText: {
+  profileIcon: {
     fontSize: 20,
-    fontWeight: '600',
-    color: COLORS.primary,
-  },
-  headerTabs: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.lightGray0,
-    borderRadius: 24,
-    padding: 3,
-    gap: 4,
-  },
-  headerTab: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  headerTabActive: {
-    backgroundColor: COLORS.white,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  headerTabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.gray4,
-  },
-  headerTabTextActive: {
-    color: COLORS.primary,
-  },
-  headerSearchIcon: {
-    padding: 4,
   },
   searchIcon: {
     marginRight: 16,

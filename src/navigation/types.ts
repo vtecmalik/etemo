@@ -15,15 +15,15 @@ export type RootStackParamList = {
     step: 'gender' | 'age' | 'skin_type' | 'skin_tone' | 'pregnancy';
   };
   Search: undefined;
+  Profile: undefined;
 };
 
 // Tab навигатор
 export type MainTabParamList = {
   Feed: undefined;
-  Favorites: undefined;
   Scanner: undefined;
-  History: undefined;
-  Profile: undefined;
+  ReviewWrite: undefined;
+  Favorites: undefined;
 };
 
 // Declare для useNavigation type safety

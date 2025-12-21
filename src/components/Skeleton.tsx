@@ -19,7 +19,7 @@ export const Skeleton = React.memo(function Skeleton({
     <View
       style={[
         styles.skeleton,
-        { width, height, borderRadius },
+        { width: width as any, height, borderRadius },
         style,
       ]}
     />
