@@ -23,20 +23,6 @@ import SearchScreen from '../screens/SearchScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// Кнопка профиля в хедере (левый верхний угол в кружке)
-function ProfileButton({ navigation }: any) {
-  return (
-    <TouchableOpacity
-      onPress={() => navigation.navigate('Profile')}
-      style={styles.profileButton}
-    >
-      <View style={styles.profileCircle}>
-        <Text style={styles.profileIcon}>👤</Text>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
 // Кнопка поиска в хедере
 function SearchButton({ navigation }: any) {
   return (
@@ -67,38 +53,42 @@ function MainTabs() {
         name="Feed"
         component={FeedScreen}
         options={({ navigation }) => ({
-          title: 'Смотрю',
+          title: 'Главная',
           headerTitle: 'Etemo',
-          headerLeft: () => <ProfileButton navigation={navigation} />,
           headerRight: () => <SearchButton navigation={navigation} />,
-        })}
-      />
-      <Tab.Screen
-        name="Scanner"
-        component={ScannerScreen}
-        options={({ navigation }) => ({
-          title: 'Ищу',
-          headerTitle: 'Сканер',
-          headerLeft: () => <ProfileButton navigation={navigation} />,
-        })}
-      />
-      <Tab.Screen
-        name="ReviewWrite"
-        component={ReviewWriteScreen}
-        options={({ navigation }) => ({
-          title: 'Пишу',
-          headerTitle: 'Написать отзыв',
-          headerLeft: () => <ProfileButton navigation={navigation} />,
         })}
       />
       <Tab.Screen
         name="Favorites"
         component={FavoritesScreen}
-        options={({ navigation }) => ({
-          title: 'Люблю',
+        options={{
+          title: 'Понравившиеся',
           headerTitle: 'Избранное',
-          headerLeft: () => <ProfileButton navigation={navigation} />,
-        })}
+        }}
+      />
+      <Tab.Screen
+        name="Scanner"
+        component={ScannerScreen}
+        options={{
+          title: 'Сканер',
+          headerTitle: 'Сканер',
+        }}
+      />
+      <Tab.Screen
+        name="ReviewWrite"
+        component={ReviewWriteScreen}
+        options={{
+          title: 'Написать',
+          headerTitle: 'Написать отзыв',
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: 'Профиль',
+          headerTitle: 'Мой профиль',
+        }}
       />
     </Tab.Navigator>
   );
@@ -156,34 +146,12 @@ export default function MainNavigator() {
             presentation: 'card',
           }}
         />
-        <Stack.Screen
-          name="Profile"
-          component={ProfileScreen}
-          options={{
-            title: 'Мой профиль',
-            presentation: 'card',
-          }}
-        />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  profileButton: {
-    marginLeft: 16,
-  },
-  profileCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  profileIcon: {
-    fontSize: 20,
-  },
   searchIcon: {
     marginRight: 16,
     padding: 4,

@@ -21,9 +21,10 @@ export type RootStackParamList = {
 // Tab навигатор
 export type MainTabParamList = {
   Feed: undefined;
+  Favorites: undefined;
   Scanner: undefined;
   ReviewWrite: undefined;
-  Favorites: undefined;
+  Profile: undefined;
 };
 
 // Declare для useNavigation type safety
