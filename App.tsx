@@ -1,12 +1,38 @@
 import React, { useEffect, useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, Text, ActivityIndicator, Alert } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import * as Updates from 'expo-updates';
 import { Accelerometer } from 'expo-sensors';
 
 import MainNavigator from './src/navigation/MainNavigator';
-import { COLORS } from './src/constants/theme';
+
+// Inline styles для ErrorBoundary (чтобы не зависели от порядка объявления)
+const errorStyles = {
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#F5F5F8',
+    padding: 24,
+  },
+  errorTitle: {
+    fontSize: 24,
+    fontWeight: '600' as const,
+    color: '#131518',
+    marginBottom: 12,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#6f6f6f',
+    textAlign: 'center' as const,
+    marginBottom: 24,
+  },
+  errorHint: {
+    fontSize: 14,
+    color: '#6f6f6f',
+    fontStyle: 'italic' as const,
+  },
+};
 
 // ErrorBoundary для отловки ошибок
 class ErrorBoundary extends React.Component<
@@ -19,22 +45,23 @@ class ErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError(error: Error) {
+    console.error('ErrorBoundary getDerivedStateFromError:', error);
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error('ErrorBoundary componentDidCatch:', error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorTitle}>Что-то пошло не так</Text>
-          <Text style={styles.errorText}>
+        <View style={errorStyles.errorContainer}>
+          <Text style={errorStyles.errorTitle}>Что-то пошло не так</Text>
+          <Text style={errorStyles.errorText}>
             {this.state.error?.message || 'Произошла ошибка'}
           </Text>
-          <Text style={styles.errorHint}>
+          <Text style={errorStyles.errorHint}>
             Встряхните устройство для перезагрузки
           </Text>
         </View>
@@ -53,8 +80,12 @@ export default function App() {
     // Инициализация приложения
     async function prepare() {
       try {
-        // Здесь можно добавить предзагрузку данных, шрифтов и т.д.
+        console.log('App: Starting initialization...');
+
+        // Даем время на загрузку
         await new Promise(resolve => setTimeout(resolve, 100));
+
+        console.log('App: Initialization complete');
         setIsReady(true);
       } catch (e) {
         console.error('Error during app initialization:', e);
@@ -139,10 +170,12 @@ export default function App() {
     };
   }, []);
 
+  // Loading screen
   if (!isReady) {
+    console.log('App: Showing loading screen');
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color="#131518" />
         <Text style={styles.loadingText}>Загрузка...</Text>
       </View>
     );
@@ -151,6 +184,8 @@ export default function App() {
   if (error) {
     console.warn('App initialization error:', error);
   }
+
+  console.log('App: Rendering main app');
 
   return (
     <ErrorBoundary>
@@ -170,35 +205,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F5F5F8',
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: COLORS.primary,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-    padding: 24,
-  },
-  errorTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: COLORS.primary,
-    marginBottom: 12,
-  },
-  errorText: {
-    fontSize: 16,
-    color: COLORS.gray4,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  errorHint: {
-    fontSize: 14,
-    color: COLORS.gray4,
-    fontStyle: 'italic',
+    color: '#131518',
   },
 });
