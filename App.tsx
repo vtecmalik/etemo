@@ -67,7 +67,14 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // Shake to reload - детектор встряхивания
+    // Shake to reload - только в PRODUCTION режиме
+    // В DEV режиме встряхивание открывает стандартное Dev Menu
+    if (__DEV__) {
+      console.log('Dev mode: shake to open Dev Menu');
+      return; // Не перехватываем встряхивание в dev режиме
+    }
+
+    // Shake to reload - детектор встряхивания (только для production)
     let subscription: any;
     let lastUpdate = 0;
     const SHAKE_THRESHOLD = 2.5; // Порог чувствительности
@@ -93,43 +100,29 @@ export default function App() {
 
     const handleReload = async () => {
       try {
-        if (__DEV__) {
-          // В режиме разработки - просто обновляем
+        // В продакшене - проверяем обновления
+        const update = await Updates.checkForUpdateAsync();
+
+        if (update.isAvailable) {
           Alert.alert(
             'Обновление',
-            'Перезагрузка приложения...',
-            [],
-            { cancelable: false }
+            'Найдено новое обновление. Загрузить?',
+            [
+              {
+                text: 'Отмена',
+                style: 'cancel',
+              },
+              {
+                text: 'Обновить',
+                onPress: async () => {
+                  await Updates.fetchUpdateAsync();
+                  await Updates.reloadAsync();
+                },
+              },
+            ]
           );
-
-          setTimeout(() => {
-            Updates.reloadAsync();
-          }, 500);
         } else {
-          // В продакшене - проверяем обновления
-          const update = await Updates.checkForUpdateAsync();
-
-          if (update.isAvailable) {
-            Alert.alert(
-              'Обновление',
-              'Найдено новое обновление. Загрузить?',
-              [
-                {
-                  text: 'Отмена',
-                  style: 'cancel',
-                },
-                {
-                  text: 'Обновить',
-                  onPress: async () => {
-                    await Updates.fetchUpdateAsync();
-                    await Updates.reloadAsync();
-                  },
-                },
-              ]
-            );
-          } else {
-            Updates.reloadAsync();
-          }
+          Updates.reloadAsync();
         }
       } catch (e) {
         console.error('Error reloading app:', e);
