@@ -7,15 +7,19 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useNavigation, useIsFocused } from '@react-navigation/native';
+import { useNavigation, useIsFocused, CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 
 import { COLORS, SPACING } from '../constants/theme';
-import { RootStackParamList } from '../navigation/types';
+import { MainTabParamList, RootStackParamList } from '../navigation/types';
 import { AnimatedButton } from '../components/TouchableScale';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList, 'Scanner'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SCANNER_WIDTH = SCREEN_WIDTH * 0.75;

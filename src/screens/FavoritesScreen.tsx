@@ -10,13 +10,18 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { CompositeNavigationProp } from '@react-navigation/native';
 import { supabase, authService } from '../services/supabase';
 import { COLORS, SPACING, BORDER_RADIUS } from '../constants/theme';
-import { RootStackParamList } from '../navigation/types';
+import { MainTabParamList, RootStackParamList } from '../navigation/types';
 import { TouchableScale, AnimatedButton } from '../components/TouchableScale';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList, 'Favorites'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 interface Product {
   id: string;

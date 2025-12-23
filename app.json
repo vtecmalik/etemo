@@ -24,9 +24,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#F5F5F8"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.etemo.app",
       "permissions": [
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
         "CAMERA",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
@@ -42,7 +44,25 @@
           "cameraPermission": "Разрешите доступ к камере для сканирования штрих-кодов"
         }
       ],
-      "expo-barcode-scanner"
-    ]
+      [
+        "react-native-edge-to-edge",
+        {
+          "android": {
+            "enforceNavigationBarContrast": false
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c0743a36-1156-4bec-85d2-a1fec9695067"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/c0743a36-1156-4bec-85d2-a1fec9695067"
+    }
   }
 }

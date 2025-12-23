@@ -35,6 +35,7 @@ export interface ParentBrand {
 }
 
 export interface Product {
+  product_id?: number | null;
   name_en: string;
   name_ru: string | null;
   name_ko: string | null;

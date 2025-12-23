@@ -9,15 +9,21 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase, authService } from '../services/supabase';
 import { COLORS, SPACING, BORDER_RADIUS } from '../constants/theme';
-import { RootStackParamList } from '../navigation/types';
+import { MainTabParamList, RootStackParamList } from '../navigation/types';
 import { TouchableScale } from '../components/TouchableScale';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { ProductCardSkeleton } from '../components/Skeleton';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList, 'Feed'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 type TabType = 'all' | 'recommended';
 
@@ -31,6 +37,7 @@ interface Product {
 
 export default function FeedScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -231,7 +238,10 @@ export default function FeedScreen() {
         keyExtractor={(item) => item.barcode}
         ListHeaderComponent={renderTabs}
         ListFooterComponent={renderFooter}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: 60 + insets.bottom + SPACING.lg },
+        ]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
         onEndReached={loadMore}

@@ -3,6 +3,8 @@ import {
   View,
   Text,
   TouchableOpacity,
+  TouchableNativeFeedback,
+  Platform,
   StyleSheet,
 } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -29,31 +31,23 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
 
     switch (routeName) {
       case 'Feed':
-        return <HomeIcon size={size} color={color} />;
+        return <HomeIcon size={size} color={color} filled={isFocused} />;
       case 'Favorites':
-        return <HeartIcon size={size} color={color} />;
+        return <HeartIcon size={size} color={color} filled={isFocused} />;
       case 'Scanner':
         return <ScannerIcon size={size} color={color} />;
       case 'ReviewWrite':
-        return <PlusIcon size={size} color={color} />;
+        return <PlusIcon size={size} color={color} filled={isFocused} />;
       case 'Profile':
-        return <ProfileIcon size={size} color={color} />;
+        return <ProfileIcon size={size} color={color} filled={isFocused} />;
       default:
         return null;
     }
   };
 
   return (
-    <View style={styles.wrapper}>
-      <View
-        style={[
-          styles.tabBarContainer,
-          {
-            paddingBottom: insets.bottom,
-            height: 60 + insets.bottom,
-          },
-        ]}
-      >
+    <View style={[styles.wrapper, { paddingBottom: insets.bottom }]}>
+      <View style={styles.tabBarContainer}>
         <View style={styles.tabBarContent}>
           {state.routes.map((route, index) => {
             const isFocused = state.index === index;
@@ -79,6 +73,44 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
               return <View key={route.key} style={styles.tabItem} />;
             }
 
+            // ProductResult - полностью скрываем (не показываем вообще)
+            if (route.name === 'ProductResult') {
+              return null;
+            }
+
+            const tabContent = (
+              <View style={styles.iconContainer}>
+                {getIcon(route.name, isFocused)}
+              </View>
+            );
+
+            const tabLabel = (
+              <Text
+                style={[
+                  styles.tabLabel,
+                  { color: isFocused ? COLORS.primary : COLORS.gray4 },
+                ]}
+                numberOfLines={1}
+              >
+                {label}
+              </Text>
+            );
+
+            if (Platform.OS === 'android') {
+              return (
+                <TouchableNativeFeedback
+                  key={route.key}
+                  onPress={onPress}
+                  background={TouchableNativeFeedback.Ripple(COLORS.greyLight, false)}
+                >
+                  <View style={styles.tabItem}>
+                    {tabContent}
+                    {tabLabel}
+                  </View>
+                </TouchableNativeFeedback>
+              );
+            }
+
             return (
               <TouchableOpacity
                 key={route.key}
@@ -86,18 +118,8 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
                 style={styles.tabItem}
                 activeOpacity={0.7}
               >
-                <View style={styles.iconContainer}>
-                  {getIcon(route.name, isFocused)}
-                </View>
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    { color: isFocused ? COLORS.primary : COLORS.gray4 },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {label}
-                </Text>
+                {tabContent}
+                {tabLabel}
               </TouchableOpacity>
             );
           })}
@@ -105,33 +127,46 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
       </View>
 
       {/* Floating кнопка Scanner */}
-      <TouchableOpacity
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          navigation.navigate('Scanner');
-        }}
-        style={styles.floatingButton}
-        activeOpacity={0.8}
-      >
-        <ScannerIcon size={28} color={COLORS.white} />
-      </TouchableOpacity>
+      {Platform.OS === 'android' ? (
+        <TouchableNativeFeedback
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            navigation.navigate('Scanner');
+          }}
+          background={TouchableNativeFeedback.Ripple('rgba(255, 255, 255, 0.3)', true)}
+        >
+          <View style={styles.floatingButton}>
+            <ScannerIcon size={28} color={COLORS.white} />
+          </View>
+        </TouchableNativeFeedback>
+      ) : (
+        <TouchableOpacity
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            navigation.navigate('Scanner');
+          }}
+          style={styles.floatingButton}
+          activeOpacity={0.8}
+        >
+          <ScannerIcon size={28} color={COLORS.white} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
-    position: 'relative',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)', // Менее прозрачный для читаемости
   },
   tabBarContainer: {
-    backgroundColor: COLORS.white,
     borderTopWidth: 1,
-    borderTopColor: COLORS.greyLight,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 10,
+    borderTopColor: 'rgba(0, 0, 0, 0.05)',
+    elevation: 0,
   },
   tabBarContent: {
     flexDirection: 'row',
@@ -156,7 +191,7 @@ const styles = StyleSheet.create({
   },
   floatingButton: {
     position: 'absolute',
-    top: -(FLOATING_BUTTON_SIZE / 2),
+    top: -(FLOATING_BUTTON_SIZE * 0.382), // Золотое сечение (1 - φ)
     left: '50%',
     marginLeft: -FLOATING_BUTTON_SIZE / 2,
     width: FLOATING_BUTTON_SIZE,

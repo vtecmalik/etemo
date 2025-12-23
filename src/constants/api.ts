@@ -1,6 +1,9 @@
 // API Configuration
 // Используем тот же бэкенд что и веб-версия
 
+// DEV: Используем локальный сервер для разработки
+// export const API_BASE_URL = 'http://192.168.219.101:3000';
+// PROD:
 export const API_BASE_URL = 'https://oleigh-barcode-checker.vercel.app';
 
 // Supabase Configuration

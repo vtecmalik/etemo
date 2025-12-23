@@ -6,19 +6,23 @@ import {
   FlatList,
   RefreshControl,
 } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 
 import { COLORS, SPACING, BORDER_RADIUS } from '../constants/theme';
-import { RootStackParamList } from '../navigation/types';
+import { MainTabParamList, RootStackParamList } from '../navigation/types';
 import { ScanHistoryItem } from '../types/product';
 import { storageService } from '../services/storage';
 import { TouchableScale } from '../components/TouchableScale';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { ProductCardSkeleton } from '../components/Skeleton';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 // Мемоизированный компонент карточки истории
 const HistoryCard = React.memo(function HistoryCard({

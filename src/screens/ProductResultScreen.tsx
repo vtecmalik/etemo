@@ -17,6 +17,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 
 import { COLORS, SPACING, BORDER_RADIUS } from '../constants/theme';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../constants/api';
 import { RootStackParamList } from '../navigation/types';
 import { Product, IngredientsData, Ingredient } from '../types/product';
 import { apiService } from '../services/api';
@@ -221,6 +222,9 @@ export default function ProductResultScreen() {
   const [ingredientsLoading, setIngredientsLoading] = useState(false);
   const [showIngredientsModal, setShowIngredientsModal] = useState(false);
   const [ringExpanded, setRingExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'ingredients' | 'reviews'>('ingredients');
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const stopPollingRef = useRef<(() => void) | null>(null);
 
   // Загрузка продукта
@@ -340,15 +344,48 @@ export default function ProductResultScreen() {
 
   const stats = product ? getIngredientsStats(product.ingredients) : { safe: 0, medium: 0, high: 0, unknown: 0, total: 0 };
 
+  // Загрузка отзывов
+  const loadReviews = useCallback(async () => {
+    if (!product?.product_id) {
+      return;
+    }
+
+    setReviewsLoading(true);
+    try {
+      const url = `${SUPABASE_URL}/rest/v1/cosme_reviews?product_id=eq.${product.product_id}&select=*&limit=10`;
+
+      const response = await fetch(url, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        }
+      });
+
+      const data = await response.json();
+      setReviews(data || []);
+    } catch (err) {
+      console.error('Error loading reviews:', err);
+    } finally {
+      setReviewsLoading(false);
+    }
+  }, [product?.product_id]);
+
+  useEffect(() => {
+    if (activeTab === 'reviews' && product?.product_id && reviews.length === 0) {
+      loadReviews();
+    }
+  }, [activeTab, product?.product_id, reviews.length, loadReviews]);
+
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl refreshing={false} onRefresh={loadProduct} tintColor={COLORS.primary} />
-      }
-    >
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={false} onRefresh={loadProduct} tintColor={COLORS.primary} />
+        }
+      >
       {/* Animated Circle - плавный переход от загрузки к продукту */}
       <AnimatedProductCircle
         loading={loading}
@@ -422,29 +459,107 @@ export default function ProductResultScreen() {
         )}
       </View>
 
-      {/* Ingredients Button */}
-      <TouchableScale style={styles.ingredientsButton} onPress={handleIngredientsButtonPress}>
-        <View style={styles.ingredientsButtonContent}>
-          <Text style={styles.ingredientsIcon}>💧</Text>
-          <View style={styles.ingredientsInfo}>
-            <Text style={styles.ingredientsTitle}>
-              Безопасность ингредиентов
-              {ingredientsLoading && <Text style={{ fontWeight: '400', color: COLORS.gray4 }}> (загрузка...)</Text>}
-              {!ingredientsLoading && stats.total > 0 && ` (${stats.total})`}
-            </Text>
-            {!ingredientsLoading && stats.total > 0 && (stats.medium + stats.high) > 0 && (
-              <Text style={styles.ingredientsWarning}>
-                <Text style={styles.warningCount}>{stats.medium + stats.high}</Text>
-                {' '}со средним риском или выше
+      {/* Tabs - Ингредиенты / Отзывы */}
+      <View style={styles.tabs}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'ingredients' && styles.tabActive]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setActiveTab('ingredients');
+          }}
+        >
+          <Text style={[styles.tabText, activeTab === 'ingredients' && styles.tabTextActive]}>
+            Ингредиенты
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'reviews' && styles.tabActive]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setActiveTab('reviews');
+          }}
+        >
+          <Text style={[styles.tabText, activeTab === 'reviews' && styles.tabTextActive]}>
+            Отзывы
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Tab Content - Ингредиенты */}
+      {activeTab === 'ingredients' && (
+        <TouchableScale style={styles.ingredientsButton} onPress={handleIngredientsButtonPress}>
+          <View style={styles.ingredientsButtonContent}>
+            <Text style={styles.ingredientsIcon}>💧</Text>
+            <View style={styles.ingredientsInfo}>
+              <Text style={styles.ingredientsTitle}>
+                Безопасность ингредиентов
+                {ingredientsLoading && <Text style={{ fontWeight: '400', color: COLORS.gray4 }}> (загрузка...)</Text>}
+                {!ingredientsLoading && stats.total > 0 && ` (${stats.total})`}
               </Text>
-            )}
+              {!ingredientsLoading && stats.total > 0 && (stats.medium + stats.high) > 0 && (
+                <Text style={styles.ingredientsWarning}>
+                  <Text style={styles.warningCount}>{stats.medium + stats.high}</Text>
+                  {' '}со средним риском или выше
+                </Text>
+              )}
+            </View>
+            <Text style={styles.chevron}>›</Text>
           </View>
-          <Text style={styles.chevron}>›</Text>
+        </TouchableScale>
+      )}
+
+      {/* Tab Content - Отзывы */}
+      {activeTab === 'reviews' && (
+        <View style={styles.reviewsContainer}>
+          {reviewsLoading ? (
+            <View style={styles.reviewsPlaceholder}>
+              <Text style={styles.reviewsText}>Загрузка отзывов...</Text>
+            </View>
+          ) : reviews.length === 0 ? (
+            <View style={styles.reviewsPlaceholder}>
+              <Text style={styles.reviewsIcon}>⭐</Text>
+              <Text style={styles.reviewsTitle}>Нет отзывов</Text>
+              <Text style={styles.reviewsText}>
+                Пока нет отзывов об этом продукте
+              </Text>
+            </View>
+          ) : (
+            <>
+              <View style={styles.reviewsHeader}>
+                <Text style={styles.reviewsCount}>
+                  {reviews.length}+ отзывов
+                </Text>
+              </View>
+              {reviews.map((review, index) => (
+                <View key={review.id || index} style={styles.reviewCard}>
+                  <View style={styles.reviewRating}>
+                    {Array.from({ length: 7 }).map((_, i) => (
+                      <Text key={i} style={styles.star}>
+                        {i < (review.rating || 0) ? '⭐' : '☆'}
+                      </Text>
+                    ))}
+                    <Text style={styles.ratingText}>{review.rating}/7</Text>
+                  </View>
+                  {review.review_text && (
+                    <Text style={styles.reviewText} numberOfLines={4}>
+                      {review.review_text}
+                    </Text>
+                  )}
+                  {review.review_date && (
+                    <Text style={styles.reviewDate}>
+                      {new Date(review.review_date).toLocaleDateString('ru-RU')}
+                    </Text>
+                  )}
+                </View>
+              ))}
+            </>
+          )}
         </View>
-      </TouchableScale>
+      )}
 
       </>
       )}
+      </ScrollView>
 
       {/* Ingredients Modal */}
       <Modal
@@ -476,7 +591,7 @@ export default function ProductResultScreen() {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </>
   );
 }
 
@@ -856,4 +971,119 @@ const styles = StyleSheet.create({
   emptyEmoji: { fontSize: 64, marginBottom: SPACING.lg },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: COLORS.primary, marginBottom: SPACING.sm },
   emptyText: { fontSize: 14, color: COLORS.gray4, textAlign: 'center' },
+
+  // Tabs styles
+  tabs: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: 4,
+    marginBottom: SPACING.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: SPACING.md,
+    alignItems: 'center',
+    borderRadius: BORDER_RADIUS.lg,
+  },
+  tabActive: {
+    backgroundColor: COLORS.primary,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.gray4,
+  },
+  tabTextActive: {
+    color: COLORS.white,
+  },
+
+  // Reviews styles
+  reviewsContainer: {
+    marginBottom: SPACING.lg,
+  },
+  reviewsPlaceholder: {
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.xxxl,
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  reviewsIcon: {
+    fontSize: 48,
+    marginBottom: SPACING.md,
+  },
+  reviewsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginBottom: SPACING.sm,
+  },
+  reviewsText: {
+    fontSize: 14,
+    color: COLORS.gray4,
+    textAlign: 'center',
+  },
+  reviewsHeader: {
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  reviewsCount: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  reviewCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.lg,
+    marginBottom: SPACING.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  reviewRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+  },
+  star: {
+    fontSize: 14,
+    marginRight: 2,
+  },
+  ratingText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginLeft: SPACING.xs,
+  },
+  reviewText: {
+    fontSize: 14,
+    color: COLORS.primary,
+    lineHeight: 20,
+    marginBottom: SPACING.xs,
+  },
+  reviewDate: {
+    fontSize: 12,
+    color: COLORS.gray4,
+  },
 });
