@@ -2,8 +2,37 @@
 
 ## 🔥 Самые актуальные билды
 
-### Development Build (с Dev Menu)
-**Последний:** 24 декабря 2025, 01:18
+### ✨ Development Build (с ФИКСАМИ!)
+**НОВЫЙ:** 24 декабря 2025, 02:28
+
+📱 **Скачать APK:**
+https://expo.dev/artifacts/eas/tEtbgAn8zx5rKDFLi8DLqM.apk
+
+📊 **Детали билда:**
+https://expo.dev/accounts/vtecmalik/projects/etemo/builds/e005c16a-7d99-4713-99da-f17e5f3a7e25
+
+**Build ID:** e005c16a-7d99-4713-99da-f17e5f3a7e25
+**Commit:** 6c29d12 ✅
+
+**Что включено:**
+- ✅ ErrorBoundary - обработка всех ошибок (нет белого экрана!)
+- ✅ Loading Screen - экран загрузки при старте
+- ✅ Dev Menu работает при встряхивании
+- ✅ Shake to reload (только в production)
+- ✅ Navigation error handling
+- ✅ expo-sensors для акселерометра
+- ✅ Все последние UI/UX улучшения
+
+**Что это:**
+- Development Build с expo-dev-client
+- Встряхивание → Dev Menu (Reload, Debug, Inspector)
+- Fast Refresh включен
+- Можно подключаться к Metro bundler
+
+---
+
+### Development Build (старый)
+**Предыдущий:** 24 декабря 2025, 01:18
 
 📱 **Скачать APK:**
 https://expo.dev/artifacts/eas/uzGGd86Xkwegtxv5SRsQJR.apk
@@ -11,11 +40,7 @@ https://expo.dev/artifacts/eas/uzGGd86Xkwegtxv5SRsQJR.apk
 📊 **Детали билда:**
 https://expo.dev/accounts/vtecmalik/projects/etemo/builds/e7748147-c64a-473f-964d-0be419f56c55
 
-**Что это:**
-- Development Build с expo-dev-client
-- Встряхивание → Dev Menu (Reload, Debug, Inspector)
-- Fast Refresh включен
-- Можно подключаться к Metro bundler
+**Commit:** 238998a (без фиксов)
 
 ---
 
