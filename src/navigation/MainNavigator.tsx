@@ -95,8 +95,26 @@ function MainTabs() {
 }
 
 export default function MainNavigator() {
+  const [error, setError] = useState<string | null>(null);
+
+  // Обработчик ошибок навигации
+  const onUnhandledAction = (action: any) => {
+    const errorMessage = `Необработанное действие: ${action.type}`;
+    console.error('Navigation error:', errorMessage, action);
+    setError(errorMessage);
+  };
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Ошибка навигации</Text>
+        <Text style={styles.errorDetail}>{error}</Text>
+      </View>
+    );
+  }
+
   return (
-    <NavigationContainer>
+    <NavigationContainer onUnhandledAction={onUnhandledAction}>
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
@@ -158,5 +176,23 @@ const styles = StyleSheet.create({
   },
   searchIconText: {
     fontSize: 24,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+    padding: 24,
+  },
+  errorText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginBottom: 8,
+  },
+  errorDetail: {
+    fontSize: 14,
+    color: COLORS.gray4,
+    textAlign: 'center',
   },
 });
